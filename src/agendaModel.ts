@@ -95,7 +95,7 @@ export const superAgendaWorkspace = (
       receiptCount,
       memoryCount,
     }),
-    sortSteps: document.agendaView.sortStrategy.map(sortStepView),
+    sortSteps: effectiveSortSteps(document.agendaView),
     groups,
     skipped: document.agendaView.skipped,
   };
@@ -445,6 +445,17 @@ const sortStepView = (
   direction: step.direction,
   detail: sortStepDetail(step.key),
 });
+
+const effectiveSortSteps = (agendaView: OrgizeAgendaViewResponseDto): SuperAgendaSortStep[] => {
+  if (agendaView.sortStrategy.length > 0) {
+    return agendaView.sortStrategy.map(sortStepView);
+  }
+  return (agendaView.cards[0]?.sortKeys ?? []).map((step) => ({
+    label: sortStepLabel(step.key),
+    direction: "default",
+    detail: sortStepDetail(step.key),
+  }));
+};
 
 const sortStepLabel = (key: string): string => {
   const labels: Record<string, string> = {
