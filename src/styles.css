@@ -800,6 +800,51 @@ nav button.active {
   white-space: pre-line;
 }
 
+.org-record-card {
+  align-content: start;
+}
+
+.org-record-render {
+  max-width: none;
+  margin: 4px 0 0;
+}
+
+.org-record-render.rendered-html h2,
+.org-record-render.rendered-html h3,
+.org-record-render.rendered-html h4 {
+  margin-top: 18px;
+}
+
+.org-record-render--memory {
+  padding: 12px;
+  border: 1px solid #e0e7ef;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.org-record-source-meta {
+  margin-top: 14px;
+  border-left: 3px solid rgba(14, 165, 233, 0.55);
+  padding: 10px 12px;
+  background: rgba(14, 165, 233, 0.08);
+}
+
+.org-record-source-meta span {
+  display: block;
+  margin-bottom: 6px;
+  color: #075985;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.org-record-source-meta pre,
+.org-record-render--source pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .card-kicker {
   color: #6f7d8f;
   font-size: 0.76rem;

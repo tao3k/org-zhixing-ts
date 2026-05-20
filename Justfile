@@ -21,6 +21,9 @@ harness-json:
 harness-agent-snapshot:
     npm run harness:agent-snapshot
 
+static:
+    npm run generate:static
+
 test:
     npm test
 

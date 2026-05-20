@@ -6,7 +6,8 @@
   "description": "A browser demo for viewing Org blog, records, and agenda data through orgize WASM.",
   "scripts": {
     "dev": "rspack serve --host 127.0.0.1",
-    "build": "tsc -b && rspack build",
+    "generate:static": "node scripts/generate-static-site.mjs",
+    "build": "npm run generate:static && tsc -b && rspack build",
     "test": "vitest run",
     "ci": "npm run typecheck && npm run harness && npm test && npm run build",
     "typecheck": "tsc -b --pretty false",
@@ -25,6 +26,7 @@
     "@rspack/cli": "^2.0.3",
     "@rspack/core": "^2.0.3",
     "@rspack/dev-server": "^2.0.1",
+    "happy-dom": "^20.9.0",
     "typescript": "^5.9.3",
     "typescript-lang-project-harness": "git+https://github.com/tao3k/typescript-lang-project-harness.git#04524b55706e77080e30795b9b7cfe014d24cfce",
     "vitest": "^4.1.7"

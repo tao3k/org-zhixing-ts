@@ -7,6 +7,7 @@ import { renderAttachmentGallery } from "./attachmentGalleryRender";
 import { renderAgentCapture } from "./captureRender";
 import { renderAgentMemory } from "./memoryRender";
 import { blogArticles, noteRecords, type OrgizeDocumentView, type ViewKey } from "./model";
+import { renderOrgRecordCards } from "./recordRender";
 import {
   augmentOrgHtmlMetadata,
   matchHeadingRecord,
@@ -17,6 +18,7 @@ import {
 } from "./orgHtmlMetadata";
 
 type TimingStats = {
+  staticMs?: number;
   parseMs?: number;
   agendaMs?: number;
   captureMs?: number;
@@ -85,9 +87,17 @@ export const renderView = ({
     case "gallery":
       return renderAttachmentGallery(document, sourceFile);
     case "records":
-      return renderRecords(noteRecords(document), "Notes");
+      return renderOrgRecordCards(noteRecords(document), "Notes", {
+        articleHtml,
+        document,
+        sourceFile,
+      });
     case "memory":
-      return renderAgentMemory(document.agentMemory);
+      return renderAgentMemory(document.agentMemory, {
+        articleHtml,
+        document,
+        sourceFile,
+      });
     case "agenda":
       return renderAgenda(document, agendaMode, agendaPanel, agendaRuleId);
     case "capture":
@@ -303,6 +313,7 @@ export const renderStats = (
   const lintCount = document.lint?.length;
   const timingText = showPerformance
     ? [
+        timings.staticMs === undefined ? null : `static ${formatMs(timings.staticMs)}`,
         timings.parseMs === undefined ? null : `parse ${formatMs(timings.parseMs)}`,
         timings.agendaMs === undefined ? null : `agenda ${formatMs(timings.agendaMs)}`,
         timings.attachmentMs === undefined ? null : `attachments ${formatMs(timings.attachmentMs)}`,
@@ -326,38 +337,6 @@ export const renderStats = (
   ]
     .filter(Boolean)
     .join(" / ");
-};
-
-const renderRecords = (records: OrgizeViewIndexRecordDto[], label: string): string => {
-  if (records.length === 0) {
-    return `<div class="empty">No ${label.toLowerCase()} records found.</div>`;
-  }
-  return `<div class="card-grid">${records.map(renderRecordCard).join("")}</div>`;
-};
-
-const renderRecordCard = (record: OrgizeViewIndexRecordDto): string => `
-  <article class="card">
-    <div class="card-kicker">${escapeHtml(record.outline)}</div>
-    <h2>${escapeHtml(record.title)}</h2>
-    <p>${escapeHtml(record.bodyPreview)}</p>
-    <div class="meta-row">
-      ${record.effectiveTags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}
-    </div>
-    ${renderProperties(record)}
-  </article>
-`;
-
-const renderProperties = (record: OrgizeViewIndexRecordDto): string => {
-  const visible = record.properties.slice(0, 4);
-  if (visible.length === 0) {
-    return "";
-  }
-  return `<dl class="properties">${visible
-    .map(
-      (property) =>
-        `<div><dt>${escapeHtml(property.key)}</dt><dd>${escapeHtml(property.value)}</dd></div>`,
-    )
-    .join("")}</dl>`;
 };
 
 const renderDiagnostics = (findings: OrgizeLintFindingDto[]): string => {

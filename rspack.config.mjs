@@ -6,6 +6,7 @@ import rspack from "@rspack/core";
 const projectRoot = dirname(fileURLToPath(import.meta.url));
 const orgizePackageRoot = resolve(projectRoot, "node_modules/orgize");
 const publicRoot = resolve(projectRoot, "public");
+const staticManifestPath = resolve(projectRoot, ".cache/org-zhixing/static-site.json");
 const orgizePackageWatchFiles = existsSync(orgizePackageRoot)
   ? [
       resolve(orgizePackageRoot, "worker.js"),
@@ -70,7 +71,12 @@ export default (_env, argv) => {
         minify: isProduction,
       }),
       new rspack.CopyRspackPlugin({
-        patterns: [{ from: publicRoot, to: "." }],
+        patterns: [
+          { from: publicRoot, to: "." },
+          ...(existsSync(staticManifestPath)
+            ? [{ from: staticManifestPath, to: "org-zhixing.static.json" }]
+            : []),
+        ],
       }),
     ],
     optimization: {

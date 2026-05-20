@@ -26,7 +26,7 @@ export const renderAgenda = (
     if (fallbackItems.length > 0) {
       return renderAgendaFallback(
         fallbackItems,
-        `No agenda rows in ${workspace.rangeLabel}; showing source planning data.`,
+        agendaWindowFallbackMessage(workspace.rangeLabel, fallbackItems.length),
       );
     }
     return `<div class="empty">No agenda rows in ${escapeHtml(workspace.rangeLabel)}.</div>`;
@@ -139,6 +139,11 @@ const renderFallbackAgendaItem = (item: AgendaItem): string => `
     <small>${item.tags.map(escapeHtml).join(" ")}</small>
   </li>
 `;
+
+const agendaWindowFallbackMessage = (rangeLabel: string, itemCount: number): string =>
+  `Agenda window ${rangeLabel} has no projected rows. Showing ${itemCount} source planning item${
+    itemCount === 1 ? "" : "s"
+  } from the current Org file instead.`;
 
 const renderRuleMicroscope = (
   workspace: SuperAgendaWorkspace,

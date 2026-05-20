@@ -9,8 +9,12 @@ import type {
 } from "orgize/dto";
 import type { AgentMemoryView, MemoryFacetView, MemoryStateGroup } from "./memoryModel";
 import { memoryAnchorId, memorySourceLabel, memoryStateLabel } from "./memoryModel";
+import { renderMemoryRecordArticle, type OrgRecordRenderContext } from "./recordRender";
 
-export const renderAgentMemory = (memory: AgentMemoryView | null): string => {
+export const renderAgentMemory = (
+  memory: AgentMemoryView | null,
+  context: OrgRecordRenderContext,
+): string => {
   if (!memory) {
     return `<div class="empty">Loading memory projection...</div>`;
   }
@@ -40,7 +44,7 @@ export const renderAgentMemory = (memory: AgentMemoryView | null): string => {
       <div class="memory-layout">
         <main class="memory-stream" aria-label="Memory cards and records">
           ${memory.groups.map(renderMemoryGroup).join("")}
-          ${renderRecordIndex(memory.groups)}
+          ${renderRecordIndex(memory.groups, context)}
         </main>
         <aside class="memory-inspector" aria-label="Memory facets">
           ${renderStateMatrix(memory.response.stats)}
@@ -111,17 +115,17 @@ const renderMemoryCard = (card: OrgizeAgentMemoryCardDto): string => `
   </article>
 `;
 
-const renderRecordIndex = (groups: MemoryStateGroup[]): string => `
+const renderRecordIndex = (groups: MemoryStateGroup[], context: OrgRecordRenderContext): string => `
   <section class="memory-record-index" aria-label="Memory record index">
     <header class="memory-section-heading">
       <p class="eyebrow">Record index</p>
       <h3>Source-backed memory records</h3>
     </header>
-    ${groups.map(renderRecordGroup).join("")}
+    ${groups.map((group) => renderRecordGroup(group, context)).join("")}
   </section>
 `;
 
-const renderRecordGroup = (group: MemoryStateGroup): string => {
+const renderRecordGroup = (group: MemoryStateGroup, context: OrgRecordRenderContext): string => {
   if (group.records.length === 0) {
     return "";
   }
@@ -132,29 +136,36 @@ const renderRecordGroup = (group: MemoryStateGroup): string => {
         <strong>${group.records.length}</strong>
       </summary>
       <div class="memory-record-list">
-        ${group.records.map(renderMemoryRecord).join("")}
+        ${group.records.map((record) => renderMemoryRecord(record, context)).join("")}
       </div>
     </details>
   `;
 };
 
-const renderMemoryRecord = (record: OrgizeMemoryRecordDto): string => `
-  <article class="memory-record" id="${memoryAnchorId(record.source)}">
-    <header>
-      <div>
-        <span>${escapeHtml(memoryStateLabel(record.state))}</span>
-        <h4>${escapeHtml(record.title)}</h4>
+const renderMemoryRecord = (
+  record: OrgizeMemoryRecordDto,
+  context: OrgRecordRenderContext,
+): string => {
+  const renderedRecord = renderMemoryRecordArticle(record, context);
+  return `
+    <article class="memory-record" id="${memoryAnchorId(record.source)}">
+      <header>
+        <div>
+          <span>${escapeHtml(memoryStateLabel(record.state))}</span>
+          <h4>${escapeHtml(record.title)}</h4>
+        </div>
+        <code>${escapeHtml(memorySourceLabel(record.source))}</code>
+      </header>
+      ${renderTags([record.todo, ...record.effectiveTags])}
+      ${renderedRecord ?? ""}
+      <div class="memory-record-details">
+        ${renderProperties(record.properties)}
+        ${renderEvidenceDetails(record.evidence)}
+        ${renderLinkDetails(record.links)}
       </div>
-      <code>${escapeHtml(memorySourceLabel(record.source))}</code>
-    </header>
-    ${renderTags([record.todo, ...record.effectiveTags])}
-    <div class="memory-record-details">
-      ${renderProperties(record.properties)}
-      ${renderEvidenceDetails(record.evidence)}
-      ${renderLinkDetails(record.links)}
-    </div>
-  </article>
-`;
+    </article>
+  `;
+};
 
 const renderStateMatrix = (stats: OrgizeMemoryStatsDto): string => `
   <section class="memory-inspector-section">

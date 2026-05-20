@@ -37,19 +37,23 @@ export const matchHeadingRecord = (
   used: Set<SectionRecord>,
 ): SectionRecord | null => {
   const headingText = normalizeDisplayText(heading.textContent ?? "");
-  if (!headingText) {
-    return null;
-  }
+  const level = headingLevel(heading);
+  const textMatched =
+    headingText.length > 0
+      ? (records.find(
+          (record) =>
+            !used.has(record) &&
+            normalizeDisplayText(sectionTitle(record)) === headingText &&
+            level >= Math.min(record.level, 6),
+        ) ??
+        records.find(
+          (record) =>
+            !used.has(record) && normalizeDisplayText(sectionTitle(record)) === headingText,
+        ))
+      : null;
   return (
-    records.find(
-      (record) =>
-        !used.has(record) &&
-        normalizeDisplayText(sectionTitle(record)) === headingText &&
-        headingLevel(heading) >= Math.min(record.level, 6),
-    ) ??
-    records.find(
-      (record) => !used.has(record) && normalizeDisplayText(sectionTitle(record)) === headingText,
-    ) ??
+    textMatched ??
+    records.find((record) => !used.has(record) && level >= Math.min(record.level, 6)) ??
     null
   );
 };

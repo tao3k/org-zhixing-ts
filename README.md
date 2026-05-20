@@ -4,9 +4,10 @@ Org Zhixing is a small browser demo that displays user-facing Org content
 through the `orgize` WebAssembly worker. It does not parse Org in TypeScript;
 Rust remains the parser and semantic projection owner.
 
-The demo is configured by `public/org-zhixing.toml`. Its default source lives in
-`public/blog/org-zhixing-demo.org`; TypeScript fetches that static Org asset and
-sends it to the `orgize` worker. The visible surface uses the Rust-rendered HTML
+The demo is configured by `public/org-zhixing.toml`. TypeScript does not parse
+the Org syntax itself. Production builds pre-generate a static Org projection
+manifest from the Rust/WASM package, and development falls back to the worker
+when that manifest is not present. The visible surface uses Rust-rendered HTML
 as the main article column, with structured side views:
 
 - Blog: headline records tagged `blog`.
@@ -36,10 +37,11 @@ direnv exec . just dev
 
 The parent `orgize` checkout owns the Rust/WASM toolchain and builds
 `wasm/dist/orgize.js` plus `wasm/dist/orgize_bg.wasm` through its root Justfile.
-`org-zhixing` consumes that package through `orgize = "file:../../wasm"` and
-owns the TypeScript/Rspack browser shell. `npm run dev` runs `rspack serve`
-with file watching for Org sources, TOML configuration, and the local WASM
-package artifacts, so frontend changes compile without restarting `just dev`.
+`org-zhixing` consumes the published `orgize-wasm` package through the `orgize`
+npm dependency and owns the TypeScript/Rspack browser shell. `npm run dev` runs
+`rspack serve` with file watching for Org sources, TOML configuration, and the
+WASM package artifacts, so frontend changes compile without restarting
+`just dev`.
 
 ## Host Boundary
 
@@ -132,13 +134,16 @@ checkout when the Rust WASM package needs rebuilding.
 
 ## Performance Shape
 
-The first paint asks the worker for the compact `viewIndex` projection, then
-renders the main article through the Rust HTML exporter. The richer `agendaView`
-projection is requested when the Agenda tab is active, so the browser gets sort
-receipts and blocker evidence without expanding the first-paint payload. The
-`capturePlan` projection is also lazy and runs only when Capture is active. Lint
-remains lazy until Diagnostics is opened, and the status line reports
-parse/agenda/capture/lint/html timings. Derived tag indexes are built once per
-parse so tab rendering does not repeatedly scan the section index. Run
+`npm run build` runs `npm run generate:static` before Rspack. That generator
+uses the Rust/WASM package to precompute `viewIndex`, `sectionIndex`, rendered
+HTML, attachment inventory, memory, agenda, and lint for every configured Org
+source, then ships the result as `org-zhixing.static.json` in `dist/`.
+
+At runtime the app first looks for that static manifest. GitHub Pages therefore
+hydrates Blog, Gallery, Notes, Memory, and Agenda from immutable static data
+instead of waiting for a chain of browser-side WASM projections. If the manifest
+is absent, such as in local watch mode, the app falls back to the worker path.
+The status line reports `static` timing for precomputed data and
+`parse/agenda/capture/lint/html` timings for dynamic projections. Run
 `just perf` for the local WASM microbenchmark, and see `docs/performance.md` for
 the current bottleneck map and next milestones.

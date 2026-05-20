@@ -17,7 +17,7 @@ export const renderAttachmentGallery = (
   if (records.length === 0) {
     return `
       <section class="attachment-gallery" aria-label="Attachment gallery">
-        ${renderAttachmentGalleryHeader(0, 0, inventory.entries.length)}
+      ${renderAttachmentGalleryHeader(0, 0, inventory.entries.length, sourceFile)}
         <div class="empty">No attachment-backed media found in this Org source.</div>
       </section>
     `;
@@ -25,7 +25,7 @@ export const renderAttachmentGallery = (
   const imageCount = records.filter((record) => record.mediaKind === "image").length;
   return `
     <section class="attachment-gallery" aria-label="Attachment gallery">
-      ${renderAttachmentGalleryHeader(records.length, imageCount, inventory.entries.length)}
+      ${renderAttachmentGalleryHeader(records.length, imageCount, inventory.entries.length, sourceFile)}
       <div class="attachment-grid">
         ${records.map((record, index) => renderAttachmentCard(record, sourceFile, index)).join("")}
       </div>
@@ -37,13 +37,14 @@ const renderAttachmentGalleryHeader = (
   displayCount: number,
   imageCount: number,
   entryCount: number,
+  sourceFile: string | undefined,
 ): string => `
   <header class="attachment-gallery-header">
     <div>
       <p class="eyebrow">Org attachments</p>
-      <h2>Wallpaper gallery</h2>
+      <h2>Attachment gallery</h2>
       <p>${escapeHtml(
-        `${displayCount} display items from ${entryCount} semantic attachment records; ${imageCount} are image media.`,
+        `${displayCount} display items from ${entryCount} semantic attachment records in ${sourceLabel(sourceFile)}; ${imageCount} are image media.`,
       )}</p>
     </div>
     <dl class="attachment-metrics" aria-label="Attachment gallery metrics">
@@ -108,6 +109,9 @@ const attachmentOutlinePath = (record: AttachmentDisplayRecord): string[] => {
   const display = record as AttachmentDisplayRecord & { outlinePathText?: string[] };
   return display.outlinePathText ?? record.outlinePath;
 };
+
+const sourceLabel = (sourceFile: string | undefined): string =>
+  sourceFile?.split("/").pop() ?? "the current Org source";
 
 const escapeHtml = (value: string | number): string =>
   String(value)
