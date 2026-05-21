@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "css-line-break": "^2.1.0",
-    "orgize": "git+https://github.com/tao3k/orgize-wasm.git#1d7daa2fdfe659671499b739db8d241513ebde71",
+    "orgize": "git+https://github.com/tao3k/orgize-wasm.git#c3b2de6fa33dae438c41cf0f3bb795ee47cd5d09",
     "photoswipe": "^5.4.4",
     "smol-toml": "^1.6.1"
   },
