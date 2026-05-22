@@ -14,12 +14,17 @@
     "harness": "typescript-project-harness .",
     "harness:json": "typescript-project-harness --json .",
     "harness:agent-snapshot": "typescript-project-harness --agent-snapshot .",
-    "perf": "node scripts/bench-orgize-wasm.mjs",
+    "perf": "npm run perf:wasm",
+    "perf:wasm": "node scripts/bench-orgize-wasm.mjs",
+    "perf:ui": "npm run build && node scripts/bench-org-zhixing-ui.mjs",
+    "perf:all": "npm run perf:wasm -- --source=blog/travel.org && npm run perf:ui",
     "preview": "rspack serve --mode production --host 127.0.0.1"
   },
   "dependencies": {
-    "css-line-break": "^2.1.0",
-    "orgize": "git+https://github.com/tao3k/orgize-wasm.git#c3b2de6fa33dae438c41cf0f3bb795ee47cd5d09",
+    "@tanstack/virtual-core": "^3.15.0",
+    "@zag-js/dialog": "^1.41.0",
+    "@zag-js/vanilla": "^1.41.0",
+    "orgize": "github:tao3k/orgize-wasm#2807b600c5e9908078443b4cb408c39cee9c06e6",
     "photoswipe": "^5.4.4",
     "smol-toml": "^1.6.1"
   },

@@ -1,5 +1,3 @@
-import { LineBreaker } from "css-line-break";
-
 type CssLineBreak = "auto" | "normal" | "strict";
 type CssWordBreak = "break-all" | "break-word" | "keep-all" | "normal";
 
@@ -11,6 +9,14 @@ type SoftBreakTextOptions = {
 
 const DEFAULT_MAX_SEGMENT_LENGTH = 24;
 const SOFT_BREAK = "<wbr>";
+const breakAfterPattern = /[./:?#[\]@!$&'()*+,;=%_-]/u;
+
+type SegmenterConstructor = new (
+  locales?: string | string[],
+  options?: { granularity: "grapheme" },
+) => {
+  segment(input: string): Iterable<{ segment: string }>;
+};
 
 export const renderSoftBreakText = (
   value: string | number,
@@ -21,38 +27,37 @@ export const renderSoftBreakText = (
     return "";
   }
 
-  const chunks = lineBreakChunks(text, {
-    lineBreak: options.lineBreak ?? "normal",
-    wordBreak: "normal",
-  }).flatMap((chunk) => splitLongChunk(chunk, options));
+  const maxSegmentLength = options.maxSegmentLength ?? DEFAULT_MAX_SEGMENT_LENGTH;
+  const chunks = softBreakChunks(text, maxSegmentLength);
 
   return chunks.map(escapeHtml).join(SOFT_BREAK);
 };
 
-const splitLongChunk = (chunk: string, options: SoftBreakTextOptions): string[] => {
-  const maxSegmentLength = options.maxSegmentLength ?? DEFAULT_MAX_SEGMENT_LENGTH;
-  if (chunk.length <= maxSegmentLength) {
-    return [chunk];
-  }
-
-  return lineBreakChunks(chunk, {
-    lineBreak: options.lineBreak ?? "normal",
-    wordBreak: options.wordBreak ?? "break-word",
-  });
-};
-
-const lineBreakChunks = (
-  text: string,
-  options: { lineBreak: CssLineBreak; wordBreak: CssWordBreak },
-): string[] => {
+const softBreakChunks = (text: string, maxSegmentLength: number): string[] => {
   const chunks: string[] = [];
-  const breaker = LineBreaker(text, options);
-  let next = breaker.next();
-  while (!next.done) {
-    chunks.push(next.value.slice());
-    next = breaker.next();
+  let current = "";
+  for (const segment of graphemeSegments(text)) {
+    current += segment;
+    if (breakAfterPattern.test(segment) || current.length >= maxSegmentLength) {
+      chunks.push(current);
+      current = "";
+    }
+  }
+  if (current) {
+    chunks.push(current);
   }
   return chunks.length > 0 ? chunks : [text];
+};
+
+const graphemeSegments = (text: string): string[] => {
+  const Segmenter = (Intl as unknown as { Segmenter?: SegmenterConstructor }).Segmenter;
+  if (!Segmenter) {
+    return Array.from(text);
+  }
+  return Array.from(
+    new Segmenter(undefined, { granularity: "grapheme" }).segment(text),
+    (item) => item.segment,
+  );
 };
 
 const escapeHtml = (value: string): string =>

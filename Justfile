@@ -34,7 +34,8 @@ check:
     npm run ci
 
 perf repeat="1" iterations="20":
-    npm run perf -- --repeat={{repeat}} --iterations={{iterations}}
+    npm run perf:wasm -- --repeat={{repeat}} --iterations={{iterations}}
+    npm run perf:ui
 
 preview port="4173":
     npm run preview -- --port {{port}}

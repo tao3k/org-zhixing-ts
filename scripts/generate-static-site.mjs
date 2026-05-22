@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
@@ -9,7 +9,10 @@ import { parse } from "smol-toml";
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const publicRoot = resolve(projectRoot, "public");
-const outputPath = resolve(projectRoot, ".cache/org-zhixing/static-site.json");
+const outputRoot = resolve(projectRoot, ".cache/org-zhixing");
+const outputPath = resolve(outputRoot, "static-site.json");
+const sourceShardPublicDir = "org-zhixing.sources";
+const sourceShardRoot = resolve(outputRoot, sourceShardPublicDir);
 const configPath = "org-zhixing.toml";
 
 const main = async () => {
@@ -28,6 +31,7 @@ const main = async () => {
     );
   }
 
+  await writeSourceShards(sources);
   const manifest = {
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
@@ -37,7 +41,9 @@ const main = async () => {
       buildTime: Org.buildTime,
       gitHash: Org.gitHash,
     },
-    sources,
+    attachmentGallery: projectAttachmentGalleryView(sources),
+    travel: projectTravelView(sources),
+    sources: sources.map(sourceSummary),
   };
 
   await mkdir(dirname(outputPath), { recursive: true });
@@ -51,15 +57,14 @@ const projectSource = async (source, config) => {
   try {
     const viewIndex = parseJson(org.viewIndexJson(source.sourceFile));
     const agendaProjection = projectAgendaView(org, viewIndex, config.agenda);
+    const attachmentInventory = await projectAttachmentInventory(org, config, source);
     return {
       ...source,
       sourceBytes: Buffer.byteLength(sourceText),
       viewIndex,
       sectionIndex: parseJson(org.sectionIndexJson(source.sourceFile)),
       html: org.html(),
-      attachmentInventory: parseJson(
-        org.attachmentInventoryJson(JSON.stringify(config.attachments)),
-      ),
+      attachmentInventory,
       memory: parseJson(org.memoryJson()),
       agendaRange: agendaProjection.range,
       agendaView: agendaProjection.view,
@@ -70,17 +75,44 @@ const projectSource = async (source, config) => {
   }
 };
 
+const writeSourceShards = async (sources) => {
+  await rm(sourceShardRoot, { recursive: true, force: true });
+  await mkdir(sourceShardRoot, { recursive: true });
+  await Promise.all(
+    sources.map((source) =>
+      writeFile(sourceShardPath(source), `${JSON.stringify(source)}\n`, "utf8"),
+    ),
+  );
+};
+
+const sourceSummary = (source) => ({
+  id: source.id,
+  name: source.name,
+  file: source.file,
+  sourceFile: source.sourceFile,
+  sourceBytes: source.sourceBytes,
+  shardPath: joinPath(sourceShardPublicDir, `${safeShardId(source.id)}.json`),
+});
+
+const sourceShardPath = (source) => resolve(sourceShardRoot, `${safeShardId(source.id)}.json`);
+
+const safeShardId = (value) =>
+  String(value)
+    .normalize("NFKD")
+    .replace(/[^A-Za-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || "source";
+
 const parseConfig = (text) => {
   const raw = asRecord(parse(text));
   const content = asOptionalRecord(raw.content);
-  const contentRoot = normalizeDir(readString(content, "root", "blog"));
+  const contentRoot = normalizeDir(
+    readString(content, "content_dir", readString(content, "root", "blog")),
+  );
   const sources = parseSources(content?.sources, contentRoot);
   return {
     contentRoot,
-    sources:
-      sources.length > 0
-        ? sources
-        : [sourceFromPath(contentRoot, "demo", "org-zhixing-demo.org", "Org Zhixing Demo")],
+    sources,
     attachments: parseAttachments(asOptionalRecord(raw.attachments), contentRoot),
     agenda: agendaSettings(asOptionalRecord(raw.agenda)),
   };
@@ -108,6 +140,333 @@ const requestAgendaView = (org, range) =>
       }),
     ),
   );
+
+const projectAttachmentInventory = async (org, config, source) => {
+  const inventory = parseJson(org.attachmentInventoryJson(JSON.stringify(config.attachments)));
+  const display = await Promise.all(
+    inventory.display.map(async (record) => ({
+      ...record,
+      publicExists: await publicAttachmentExists(record, source.sourceFile),
+    })),
+  );
+  return { ...inventory, display };
+};
+
+const projectAttachmentGalleryView = (sources) => {
+  const records = sources.flatMap((source) =>
+    source.attachmentInventory.display.filter(isImageAttachmentRecord).map((record) => ({
+      record,
+      sourceFile: source.sourceFile,
+      sourceId: source.id,
+      sourceName: source.name,
+    })),
+  );
+  const entryCount = sources.reduce(
+    (sum, source) => sum + source.attachmentInventory.entries.length,
+    0,
+  );
+  return {
+    records,
+    entryCount,
+    sourceCount: sources.length,
+    label: `${sources.length} Org sources`,
+    siteWide: true,
+  };
+};
+
+const isImageAttachmentRecord = (record) =>
+  record.mediaKind === "image" && record.publicExists !== false;
+
+const publicAttachmentExists = async (record, sourceFile) => {
+  try {
+    await access(resolve(publicRoot, attachmentPublicPath(record, sourceFile)));
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const attachmentPublicPath = (record, sourceFile) => {
+  const directoryPath = normalizePublicPath(record.directoryPath);
+  const linkPath = normalizePublicPath(record.linkPath);
+  const joined = joinPath(directoryPath, linkPath);
+  const sourceRoot = normalizePublicPath(sourceFile).split("/")[0] ?? "";
+  return sourceRoot && directoryPath.startsWith(`${sourceRoot}/`)
+    ? joined
+    : joinPath(publicDirname(sourceFile), joined);
+};
+
+const projectTravelView = (sources) => {
+  const places = sources.flatMap((source) => projectTravelSource(source));
+  const regions = [...new Set(places.map((place) => place.region).filter(Boolean))];
+  const sourceCount = new Set(places.map((place) => place.sourceFile ?? place.sourceName)).size;
+  return {
+    places,
+    regions,
+    scannedSourceCount: sources.length,
+    sourceCount: places.length > 0 ? sourceCount : 0,
+    locatedCount: places.filter((place) => place.coordinates).length,
+    enrichCandidateCount: places.filter((place) => place.needsEnrichment).length,
+    siteWide: true,
+  };
+};
+
+const projectTravelSource = (source) => {
+  let currentRegion = null;
+  const places = [];
+  for (const record of source.sectionIndex.records.filter(isTravelCandidate)) {
+    const title = sectionTitle(record);
+    if (!title) {
+      continue;
+    }
+    const headingRegion = regionFromHeading(title);
+    if (headingRegion) {
+      currentRegion = headingRegion;
+    }
+    places.push(createTravelPlace(record, currentRegion, source));
+  }
+  return places;
+};
+
+const createTravelPlace = (record, currentRegion, source) => {
+  const title = sectionTitle(record);
+  const headingRegion = regionFromHeading(title);
+  const tags = [...new Set((record.effectiveTags ?? []).filter(Boolean))];
+  const region = regionFromRecord(record) ?? currentRegion;
+  const coordinates = coordinatesFromRecord(record);
+  const placeId = propertyValue(record, "GOOGLE_PLACE_ID") ?? propertyValue(record, "PLACE_ID");
+  const placeHints = placeHintsFromRecord(record);
+  const explicitQuery =
+    propertyValue(record, "GOOGLE_MAPS_QUERY") ??
+    propertyValue(record, "MAPS_QUERY") ??
+    propertyValue(record, "LOCATION_QUERY");
+  const query = mapQuery(
+    explicitQuery,
+    coordinates,
+    headingRegion ? [] : placeHints,
+    headingRegion ?? title,
+    region,
+  );
+  const enrichFields = enrichFieldsFor(record, coordinates, region, placeId);
+  return {
+    id: travelPlaceId(source.sourceFile, record.source.rangeStart),
+    rangeStart: record.source.rangeStart,
+    title,
+    outline: outlineText(record),
+    sourceFile: source.sourceFile ?? null,
+    sourceName: source.name ?? null,
+    region,
+    tags,
+    kind: travelKind(Boolean(headingRegion)),
+    coordinates,
+    query,
+    googleMapsUrl: googleMapsSearchUrl(query, placeId),
+    googleMapsEmbedUrl: googleMapsEmbedUrl(query),
+    sourceLinks: sourceLinksFromRecord(record),
+    evidence: evidenceFromRecord(record, coordinates, placeHints),
+    enrichFields,
+    needsEnrichment: enrichFields.length > 0,
+  };
+};
+
+const isTravelCandidate = (record) => {
+  if ((record.effectiveTags ?? []).some((tag) => tag.toLowerCase() === "travel")) {
+    return true;
+  }
+  if (regionFromHeading(sectionTitle(record)) || regionFromRecord(record)) {
+    return true;
+  }
+  return Boolean(coordinatesFromRecord(record) || propertyValue(record, "GOOGLE_MAPS_QUERY"));
+};
+
+const sectionTitle = (record) => normalizeDisplayText(record.titleText ?? record.title ?? "");
+
+const normalizeDisplayText = (value) =>
+  String(value ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const regionFromRecord = (record) => {
+  for (const item of record.outlinePathText ?? record.outlinePath ?? []) {
+    const region = regionFromHeading(item);
+    if (region) {
+      return region;
+    }
+  }
+  return null;
+};
+
+const regionFromHeading = (title) => {
+  const match = /^游山玩水->(.+)$/.exec(normalizeDisplayText(title));
+  return match ? match[1].trim() : null;
+};
+
+const travelKind = (isRegion) => {
+  if (isRegion) return "region";
+  return "place";
+};
+
+const mapQuery = (explicitQuery, coordinates, placeHints, title, region) => {
+  if (explicitQuery) return explicitQuery;
+  if (coordinates) return `${coordinates.lat},${coordinates.lon}`;
+  const place = placeHints[0] ?? title;
+  return region && !place.includes(region) ? `${place} ${region}` : place;
+};
+
+const coordinatesFromRecord = (record) => {
+  const lat = propertyValue(record, "GEO_LAT") ?? propertyValue(record, "LATITUDE");
+  const lon = propertyValue(record, "GEO_LON") ?? propertyValue(record, "LONGITUDE");
+  if (lat && lon) {
+    return coordinatePair(Number(lat), Number(lon), `${lat},${lon}`);
+  }
+  const raw =
+    propertyValue(record, "地理坐标") ??
+    propertyValue(record, "COORDINATES") ??
+    propertyValue(record, "GEO") ??
+    propertyValue(record, "LOCATION");
+  return raw ? parseCoordinateText(raw) : null;
+};
+
+const parseCoordinateText = (raw) => {
+  const decimalPair = /(-?\d{1,3}(?:\.\d+)?)\s*[;,]\s*(-?\d{1,3}(?:\.\d+)?)/.exec(raw);
+  if (decimalPair) {
+    return coordinatePair(Number(decimalPair[1]), Number(decimalPair[2]), raw);
+  }
+  const degreePair =
+    /(-?\d{1,3}(?:\.\d+)?)\s*°?\s*[NS北南]?\s+(-?\d{1,3}(?:\.\d+)?)\s*°?\s*[EW东西]?/.exec(raw);
+  return degreePair ? coordinatePair(Number(degreePair[1]), Number(degreePair[2]), raw) : null;
+};
+
+const coordinatePair = (lat, lon, raw) =>
+  Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180
+    ? { lat, lon, raw }
+    : null;
+
+const placeHintsFromRecord = (record) => {
+  return [
+    ...new Set(
+      recordLinks(record)
+        .filter((link) => link.path.startsWith("id:"))
+        .map((link) => normalizeDisplayText(link.description))
+        .filter(isPlaceHint),
+    ),
+  ];
+};
+
+const isPlaceHint = (value) =>
+  value.length > 0 &&
+  !value.startsWith("id:") &&
+  !/youtube|youtu\.be|视频|日记|合集|播放|episode|vlog/i.test(value);
+
+const sourceLinksFromRecord = (record) => {
+  return [
+    ...new Map(
+      recordLinks(record)
+        .filter((link) => /^https?:\/\//.test(link.path))
+        .map((link) => [
+          link.path,
+          {
+            kind: sourceLinkKind(link.path),
+            label: normalizeDisplayText(link.description || link.path),
+            url: link.path,
+          },
+        ]),
+    ).values(),
+  ];
+};
+
+const sourceLinkKind = (url) => {
+  if (/youtube\.com|youtu\.be/.test(url)) return "video";
+  if (/wikipedia\.org|baike\.baidu\.com/.test(url)) return "wiki";
+  return "web";
+};
+
+const recordLinks = (record) =>
+  (record.links ?? [])
+    .map((link) => ({
+      path: link.path ?? "",
+      description: link.description ?? link.path ?? "",
+    }))
+    .filter((link) => link.path.length > 0);
+
+const evidenceFromRecord = (record, coordinates, placeHints) => {
+  const evidence = [];
+  if (coordinates)
+    evidence.push({ label: "coordinates", value: `${coordinates.lat}, ${coordinates.lon}` });
+  for (const hint of placeHints.slice(0, 3)) evidence.push({ label: "place hint", value: hint });
+  for (const property of (record.properties ?? []).filter(isTravelProperty).slice(0, 4)) {
+    evidence.push({ label: property.key, value: property.value });
+  }
+  for (const timestamp of timestampEvidence(record).slice(0, 2)) {
+    evidence.push({ label: "captured", value: timestamp });
+  }
+  return evidence;
+};
+
+const isTravelProperty = (property) =>
+  [
+    "地理坐标",
+    "URL",
+    "wikinfo-id",
+    "GOOGLE_MAPS_QUERY",
+    "GOOGLE_PLACE_ID",
+    "GEO_LAT",
+    "GEO_LON",
+    "TRAVEL_REGION",
+  ].includes(property.key);
+
+const timestampEvidence = (record) => [
+  ...new Set(
+    (record.body ?? []).flatMap((slice) =>
+      [...String(slice.text ?? "").matchAll(/\[(\d{4}-\d{2}-\d{2}[^\]]*)\]/g)].map(
+        (match) => match[1],
+      ),
+    ),
+  ),
+];
+
+const enrichFieldsFor = (record, coordinates, region, placeId) => {
+  const fields = [];
+  if (!coordinates) fields.push("GEO_LAT", "GEO_LON");
+  if (!propertyValue(record, "GOOGLE_MAPS_QUERY")) fields.push("GOOGLE_MAPS_QUERY");
+  if (!placeId) fields.push("GOOGLE_PLACE_ID");
+  if (region && !propertyValue(record, "TRAVEL_REGION")) fields.push("TRAVEL_REGION");
+  return fields;
+};
+
+const propertyValue = (record, key) =>
+  (record.properties ?? []).find((property) => property.key.toUpperCase() === key.toUpperCase())
+    ?.value ?? null;
+
+const outlineText = (record) =>
+  (record.outlinePathText ?? record.outlinePath ?? [sectionTitle(record)])
+    .map(normalizeDisplayText)
+    .filter(Boolean)
+    .join(" / ");
+
+const travelPlaceId = (sourceFile, rangeStart) => {
+  const sourceSlug =
+    sourceFile
+      ?.toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "current";
+  return `${sourceSlug}-${rangeStart}`;
+};
+
+const googleMapsSearchUrl = (query, placeId) => {
+  const url = new URL("https://www.google.com/maps/search/");
+  url.searchParams.set("api", "1");
+  url.searchParams.set("query", query);
+  if (placeId) url.searchParams.set("query_place_id", placeId);
+  return url.toString();
+};
+
+const googleMapsEmbedUrl = (query) => {
+  const url = new URL("https://maps.google.com/maps");
+  url.searchParams.set("q", query);
+  url.searchParams.set("output", "embed");
+  return url.toString();
+};
 
 const parseSources = (raw, contentRoot) =>
   Array.isArray(raw)
@@ -274,6 +633,22 @@ const normalizeAttachmentDir = (value, contentRoot) => {
         : `${contentRoot}/${trimmed}`;
   assertSafeAttachmentPath(normalized);
   return normalized;
+};
+
+const normalizePublicPath = (value) => publicSegments(String(value)).join("/");
+
+const publicDirname = (path) => {
+  const normalized = normalizePublicPath(path);
+  const slash = normalized.lastIndexOf("/");
+  return slash === -1 ? "" : normalized.slice(0, slash);
+};
+
+const joinPath = (...parts) => parts.flatMap((part) => publicSegments(String(part))).join("/");
+
+const publicSegments = (value) => {
+  const segments = value.split("/").filter((segment) => segment.length > 0 && segment !== ".");
+  const publicIndex = segments.lastIndexOf("public");
+  return publicIndex === -1 ? segments : segments.slice(publicIndex + 1);
 };
 
 const assertSafePath = (value) => {

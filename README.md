@@ -12,6 +12,8 @@ as the main article column, with structured side views:
 
 - Blog: headline records tagged `blog`.
 - Records: ordinary user records, properties, links, and attachment evidence.
+- Travel: Org travel headings projected into place cards with Google Maps URLs,
+  coordinate evidence, source links, and Agent enrichment fields.
 - Agenda: a modern, explainable planning workspace built from the Rust-owned
   `agendaView` projection. TypeScript groups parser-produced cards by attention
   signals such as blockers, timed focus, deadlines, waiting state, and completion
@@ -56,6 +58,14 @@ The reusable browser layer is `mountOrgZhixingApp(root, { createWorker })`.
 config, source loading, view model, and renderer stay host-agnostic so a larger
 product route can mount the same app with its own worker factory.
 
+## Documentation
+
+Durable design notes are Org-first and indexed from `docs/index.org`. The
+content loading contract lives in
+`docs/10_architecture/10.01_content_directory_contract.org`, and the Agent
+Travel projection contract lives in
+`docs/10_architecture/10.02_agent_travel_projection.org`.
+
 ## Configuration
 
 User-facing configuration is TOML, but it is intentionally smaller and cleaner
@@ -67,13 +77,7 @@ title = "Org Zhixing"
 locale = "zh-CN"
 
 [content]
-root = "blog"
-default_source = "demo"
-
-[[content.sources]]
-id = "demo"
-title = "Org Zhixing Demo"
-file = "org-zhixing-demo.org"
+content_dir = "blog"
 
 [ui]
 default_view = "agenda"
@@ -102,8 +106,11 @@ mode = "classic"
 The browser accepts `?config=other.toml`, `?source=note.org`,
 `?view=agenda`, `?view=capture`, `?agenda=strict`, `?agenda=auto`,
 `?agenda=agent`, and `?perf=0` overrides.
-Config files must be root-level public TOML files, and content sources stay
-under `public/blog/*.org`.
+Config files must be root-level public TOML files. The `[content] content_dir`
+is the entry directory, and the static generator discovers `*.org` files under
+that root in the same spirit as Hugo content traversal. Legacy
+`[[content.sources]]` tables are still parsed for older fixtures, but new
+configs should let Org files own titles, tags, and semantic metadata.
 
 ## Capture Runtime Projection
 
@@ -137,13 +144,18 @@ checkout when the Rust WASM package needs rebuilding.
 `npm run build` runs `npm run generate:static` before Rspack. That generator
 uses the Rust/WASM package to precompute `viewIndex`, `sectionIndex`, rendered
 HTML, attachment inventory, memory, agenda, and lint for every configured Org
-source, then ships the result as `org-zhixing.static.json` in `dist/`.
+source.  The build ships a compact `org-zhixing.static.json` entry manifest plus
+per-source JSON shards under `org-zhixing.sources/`.
 
 At runtime the app first looks for that static manifest. GitHub Pages therefore
-hydrates Blog, Gallery, Notes, Memory, and Agenda from immutable static data
-instead of waiting for a chain of browser-side WASM projections. If the manifest
-is absent, such as in local watch mode, the app falls back to the worker path.
+hydrates source navigation, site-wide Gallery, and Travel from immutable compact
+static data. Source-scoped views and the site-wide Notes view load the full
+source shards on demand instead of parsing one large manifest up front. If the
+manifest is absent, such as in local watch mode, the app falls back to the
+worker path.
 The status line reports `static` timing for precomputed data and
 `parse/agenda/capture/lint/html` timings for dynamic projections. Run
-`just perf` for the local WASM microbenchmark, and see `docs/performance.md` for
-the current bottleneck map and next milestones.
+`just perf` for the WASM and UI performance gates. The durable reports live in
+`docs/90_operations/performance-reports/`, and
+`docs/90_operations/90.01_performance_notes.org` tracks the current bottleneck
+map and next milestones.

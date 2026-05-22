@@ -1,5 +1,6 @@
 import type { OrgizeMemoryRecordDto, OrgizeViewIndexRecordDto } from "orgize/dto";
 import { rewriteAttachmentLinks } from "./attachmentHtmlRewrite";
+import { applyHtmlEmbedPolicy } from "./htmlEmbedPolicy";
 import { type OrgizeDocumentView } from "./model";
 import {
   augmentOrgHtmlMetadata,
@@ -135,6 +136,7 @@ export const renderedOrgRecords = (
     used.add(record);
     const section = cloneSection(heading, parsed);
     rewriteAttachmentLinks(section, context.document, context.sourceFile);
+    applyHtmlEmbedPolicy(section);
     augmentOrgHtmlMetadata(section, context.document);
     section.querySelector("h1,h2,h3,h4,h5,h6")?.remove();
     rendered.set(record.source.rangeStart, {

@@ -1,0 +1,49 @@
+# Org Zhixing Johnny.Decimal topology manifest.
+#
+# Durable docs are Org files whose path carries the documentation coordinate.
+
+[manifest]
+id = "org-zhixing.docs-topology"
+framework = "johnny-decimal"
+mode = "path_first"
+coordinate_source = "path"
+note_file_shape = "AC.ID_semantic_name.org"
+category_directory_shape = "docs/AC_slug"
+canonical_index = "docs/00_index/00.01_jdex.org"
+
+[[areas]]
+range = "00-09"
+name = "Index and intake"
+description = "Documentation index, coordinate map, and authoring coordination."
+
+[[areas]]
+range = "10-19"
+name = "Architecture"
+description = "Configuration, static projection, and Agent-facing view contracts."
+
+[[areas]]
+range = "90-99"
+name = "Operations"
+description = "Verification, performance notes, and report consumption."
+
+[[categories]]
+id = "00"
+area = "00-09"
+directory = "docs/00_index"
+name = "JDex and documentation index"
+description = "Stable entrypoint for the documentation coordinate map."
+reserved = true
+
+[[categories]]
+id = "10"
+area = "10-19"
+directory = "docs/10_architecture"
+name = "Architecture and Agent projections"
+description = "Org-native content loading and downstream Agent consumption contracts."
+
+[[categories]]
+id = "90"
+area = "90-99"
+directory = "docs/90_operations"
+name = "Verification and performance"
+description = "Validation commands, performance receipts, and operational notes."

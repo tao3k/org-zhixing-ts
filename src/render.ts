@@ -3,11 +3,18 @@ import type { AgendaPanelKey } from "./agendaTypes";
 import type { AgendaModeKey } from "./config";
 import { renderAgenda } from "./agendaRender";
 import { rewriteAttachmentLinks } from "./attachmentHtmlRewrite";
+import {
+  attachmentGalleryFromDocument,
+  type AttachmentGalleryView,
+} from "./attachmentGalleryModel";
 import { renderAttachmentGallery } from "./attachmentGalleryRender";
 import { renderAgentCapture } from "./captureRender";
 import { renderAgentMemory } from "./memoryRender";
+import { applyHtmlEmbedPolicy } from "./htmlEmbedPolicy";
 import { blogArticles, noteRecords, type OrgizeDocumentView, type ViewKey } from "./model";
 import { renderOrgRecordCards, renderSiteOrgRecordCards } from "./recordRender";
+import { renderTravel } from "./travelRender";
+import type { TravelView } from "./travelModel";
 import {
   augmentOrgHtmlMetadata,
   matchHeadingRecord,
@@ -40,7 +47,9 @@ type RenderViewOptions = {
   articleMessage?: string;
   blogArticleRangeStart?: number | null;
   blogZenMode?: boolean;
-  siteNotes?: SiteNoteSource[];
+  attachmentGallery?: AttachmentGalleryView | null;
+  siteNotes?: SiteNoteSource[] | null;
+  travelView?: TravelView;
   sourceFile?: string;
 };
 
@@ -57,6 +66,10 @@ type PreparedArticle = {
 };
 
 export const renderView = (options: RenderViewOptions): string => {
+  const siteWideHtml = renderSiteWideView(options);
+  if (siteWideHtml !== null) {
+    return siteWideHtml;
+  }
   const pendingMessage = options.pendingMessage ?? "";
   if (pendingMessage) {
     return `<div class="empty">${escapeHtml(pendingMessage)}</div>`;
@@ -65,6 +78,21 @@ export const renderView = (options: RenderViewOptions): string => {
     return `<div class="empty">Loading Org parser...</div>`;
   }
   return renderLoadedView({ ...options, document: options.document });
+};
+
+const renderSiteWideView = (options: RenderViewOptions): string | null => {
+  if (options.view === "travel" && options.travelView) {
+    return renderTravel(options.document, options.sourceFile, options.travelView);
+  }
+  if (options.view === "gallery" && options.attachmentGallery !== undefined) {
+    return renderAttachmentGallery(options.attachmentGallery ?? null);
+  }
+  if (options.view === "records" && options.siteNotes !== undefined) {
+    return options.siteNotes
+      ? renderSiteOrgRecordCards(options.siteNotes)
+      : `<div class="empty">Loading static notes...</div>`;
+  }
+  return null;
 };
 
 const renderLoadedView = ({
@@ -77,7 +105,9 @@ const renderLoadedView = ({
   articleMessage = "",
   blogArticleRangeStart = null,
   blogZenMode = false,
+  attachmentGallery,
   siteNotes,
+  travelView,
   sourceFile,
 }: RenderViewOptions & { document: OrgizeDocumentView }): string => {
   switch (view) {
@@ -91,7 +121,9 @@ const renderLoadedView = ({
         sourceFile,
       );
     case "gallery":
-      return renderAttachmentGallery(document, sourceFile);
+      return renderAttachmentGallery(
+        attachmentGallery ?? attachmentGalleryFromDocument(document, sourceFile),
+      );
     case "records":
       if (siteNotes) {
         return renderSiteOrgRecordCards(siteNotes);
@@ -107,6 +139,8 @@ const renderLoadedView = ({
         document,
         sourceFile,
       });
+    case "travel":
+      return renderTravel(document, sourceFile, travelView);
     case "agenda":
       return renderAgenda(document, agendaMode, agendaPanel, agendaRuleId);
     case "capture":
@@ -295,6 +329,7 @@ const prepareArticleHtml = (
     }
   }
   rewriteAttachmentLinks(body, document, sourceFile);
+  applyHtmlEmbedPolicy(body);
   augmentOrgHtmlMetadata(body, document);
   return { html: body.innerHTML, toc };
 };
@@ -315,12 +350,36 @@ export const renderStats = (
   document: OrgizeDocumentView | null,
   timings: TimingStats = {},
   showPerformance = true,
+  attachmentGallery?: AttachmentGalleryView,
 ): string => {
   if (!document) {
     return "No document";
   }
   const lintCount = document.lint?.length;
-  const timingText = showPerformance
+  const lintText = lintCount === undefined ? "lint lazy" : `${lintCount} lint`;
+  return [
+    `${document.counts.blog} blog`,
+    attachmentStatsText(document, attachmentGallery),
+    `${document.counts.records} records`,
+    `${document.counts.memory} memory`,
+    `${document.counts.agenda} agenda`,
+    lintText,
+    timingStatsText(timings, showPerformance),
+  ]
+    .filter(Boolean)
+    .join(" / ");
+};
+
+const attachmentStatsText = (
+  document: OrgizeDocumentView,
+  attachmentGallery: AttachmentGalleryView | undefined,
+): string =>
+  attachmentGallery
+    ? `${attachmentGallery.records.length} image attachments`
+    : `${document.counts.attachments} attachments`;
+
+const timingStatsText = (timings: TimingStats, showPerformance: boolean): string =>
+  showPerformance
     ? [
         timings.staticMs === undefined ? null : `static ${formatMs(timings.staticMs)}`,
         timings.parseMs === undefined ? null : `parse ${formatMs(timings.parseMs)}`,
@@ -334,19 +393,6 @@ export const renderStats = (
         .filter(Boolean)
         .join(" / ")
     : "";
-  const lintText = lintCount === undefined ? "lint lazy" : `${lintCount} lint`;
-  return [
-    `${document.counts.blog} blog`,
-    `${document.counts.attachments} attachments`,
-    `${document.counts.records} records`,
-    `${document.counts.memory} memory`,
-    `${document.counts.agenda} agenda`,
-    lintText,
-    timingText,
-  ]
-    .filter(Boolean)
-    .join(" / ");
-};
 
 const renderDiagnostics = (findings: OrgizeLintFindingDto[]): string => {
   if (findings.length === 0) {

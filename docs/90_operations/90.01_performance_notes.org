@@ -1,0 +1,118 @@
+* 90.01 Performance Notes
+
+The current browser architecture keeps Org parsing in Rust and uses TypeScript
+only for orchestration and rendering.
+
+** Current Bottlenecks
+
+- Cold start must fetch, compile, and instantiate =orgize_bg.wasm=.
+- The old first paint requested the full =snapshot= projection, which also ran
+  metadata, outline, attachments, source block, column view, and lint
+  projections before Blog/Records/Agenda could render.
+- The initial demo showed raw Org in the left column, which made the page feel
+  like an editor instead of a blog reader.
+- =npm run dev= used to rebuild WASM on every server start, which made local
+  feedback feel like runtime latency.
+- The first Vite config allowed =..= and =../..= from inside
+  =.data/org-zhixing=, which exposed both =.data= and the whole parent =orgize=
+  checkout to the dev server.  Sampling high CPU showed filesystem
+  =stat=/=scandir= work, so the problem was watcher scope rather than Rust
+  parsing.
+
+** Implemented Fixes
+
+- First paint now requests only the narrow =viewIndex= projection.
+- The left column now renders the Rust HTML exporter output as the primary blog
+  article surface instead of showing raw Org text.
+- Lint is loaded only when Diagnostics is opened.
+- Tag filtering and agenda rows are indexed once per parse instead of scanning
+  the section index on every render.
+- Side-view markup is cached after each parse so tab switches do not rerender
+  the same card and agenda lists.
+- The status line reports parse/lint/html timings so regressions are visible.
+- =npm run dev= starts the frontend dev server directly; rebuild the Rust WASM
+  package from the parent =orgize= checkout with =just wasm-build=.
+- =viewIndex= is projected directly from semantic sections instead of building
+  the full section-index records and trimming them afterward.
+- =viewIndex= de-duplicates effective tags and omits empty optional fields so
+  repeated =#+FILETAGS= data cannot dominate the first-paint payload.
+- The WASM wrapper caches the semantic AST after the first projection for a
+  source revision, so later projections do not rebuild the owned semantic tree.
+- Document-level =FILETAGS= are de-duplicated during semantic prescan, which
+  keeps inherited tag vectors from growing with repeated global tag keywords.
+- The attachment gallery viewer loads PhotoSwipe only after image-backed
+  attachment openers are present in the current view.
+- Memory/link soft wrapping uses native grapheme segmentation plus deterministic
+  separator breaks, so =css-line-break= no longer ships in the initial bundle.
+- Static generation now emits a compact entry manifest plus per-source shards.
+  The entry manifest keeps source navigation, site-wide Gallery, and Travel
+  cheap; source-scoped views and site-wide Notes load full source projections on
+  demand.
+- Vite now allows only the demo root and the parent =wasm= package, excludes the
+  symlinked =orgize= package from dependency pre-bundling, and uses an explicit
+  watch allowlist: =src/=, root entry files, root-level public TOML config,
+  =public/blog/*.org=, and the built =wasm/dist= artifact surface.  Generated
+  directories such as =.git=, =target=, =.devenv=, =dist=, and =node_modules= are
+  ignored.
+
+** Local Measurement
+
+Run:
+
+#+begin_src sh
+just perf
+just perf 100 30
+npm run perf:ui
+#+end_src
+
+The benchmark reports are Git-tracked under
+=docs/90_operations/performance-reports/=:
+
+- =org-zhixing-wasm.json= reports cold init, parse, update, projection JSON
+  generation, pure JSON parse, lint, and HTML timings.
+- =org-zhixing-ui.json= reports entry manifest size, source-shard size, eager
+  script size, static manifest JSON parse timing, Travel projection read
+  timing, and whether PhotoSwipe, =css-line-break=, TanStack Virtual, or the
+  Travel virtual-list chunk leaked into initial scripts.
+
+The unit suite also carries regression gates:
+
+- real-scale Travel render with 22 places must not emit
+  =data-travel-virtual-list=;
+- real-scale Travel virtual-list binding must not construct =ResizeObserver=;
+- source-derived static Travel projection fallback must be cached;
+- the Travel virtual-list dependency must stay behind a dynamic import.
+- the attachment lightbox dependency must stay behind an image-opener dynamic
+  import;
+- link soft wrapping must not reintroduce the =css-line-break= runtime.
+- sharded static manifests must keep site-wide Gallery available from the entry
+  manifest while Records loads source shards on demand.
+
+On the local 100x demo fixture, parse p95 is still single-digit milliseconds;
+the visible first-call bottleneck is semantic conversion, not the rowan parser.
+The current =viewIndex= path reduces first-paint payload from the full section
+index's 2.9 MB to about 0.33 MB and avoids the expensive link/target/lifecycle
+indexing path for the first screen.  The same 100x fixture currently measures
+=parseViewIndexNew= at p50 16.4 ms / p95 17.5 ms, cached =viewIndexJson= at p50
+0.89 ms / p95 1.12 ms, and pure =viewIndexJsonParse= at p50 0.69 ms / p95 1.07
+ms.
+
+The current UI performance receipt shows =org-zhixing.static.json= at about
+53 KiB, with eight source shards totaling about 1.2 MiB.  Static manifest parse
+p95 is now below 3 ms on this fixture, so the former 1.3 MiB entry-manifest
+bottleneck has moved into shard-level DTO shape.
+
+** Next Performance Milestones
+
+- Split the largest source shards by projection if Records, Blog, and Agenda
+  begin needing independent load paths.  The current largest shard is the
+  wallpaper gallery source, because it owns many attachment display records.
+- Inspect the shared eager vendor chunk when =initialScriptBytes= grows; keep
+  PhotoSwipe, =css-line-break=, TanStack Virtual, parser runtime, and map code
+  out of initial scripts.
+- Keep using worker isolation, then add request cancellation for very large
+  documents and rapid navigation.
+- Split DTO payloads further when a view only needs title, tags, planning, and
+  source ranges.
+- Consider a compact binary transport only after JSON payload size becomes the
+  measured bottleneck.

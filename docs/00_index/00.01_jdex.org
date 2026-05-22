@@ -1,0 +1,29 @@
+* 00.01 JDex
+
+This is the coordinate map for durable Org Zhixing documentation.
+
+** Areas
+
+| Area | Scope |
+|------+-------|
+| 00-09 | Index and documentation coordination |
+| 10-19 | Architecture, configuration, and Agent projections |
+| 90-99 | Verification, performance, and operations |
+
+** Coordinates
+
+| Coordinate | Record | Status |
+|------------+--------+--------|
+| 00.01 | [[file:00.01_jdex.org][JDex]] | Active |
+| 10.01 | [[file:../10_architecture/10.01_content_directory_contract.org][Content Directory Contract]] | Active |
+| 10.02 | [[file:../10_architecture/10.02_agent_travel_projection.org][Agent Travel Projection]] | Active |
+| 90.01 | [[file:../90_operations/90.01_performance_notes.org][Performance Notes]] | Active |
+
+** Rules
+
+- Docs are Org-first.  Markdown can appear only when an external tool requires
+  it.
+- The path is the stable coordinate.  Headline text may improve, but coordinate
+  identity should not churn.
+- README stays an entrypoint; durable design and consumption contracts live
+  under this index.

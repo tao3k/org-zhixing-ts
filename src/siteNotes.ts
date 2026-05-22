@@ -1,7 +1,7 @@
 import type { OrgizeViewIndexRecordDto } from "orgize/dto";
 import type { AgendaSettings } from "./config";
 import { noteRecords, type OrgizeDocumentView } from "./model";
-import { documentViewFromStaticSource, type StaticSiteData } from "./staticSiteData";
+import { documentViewFromStaticSource, type StaticSourceProjection } from "./staticSiteData";
 
 export type SiteNoteSource = {
   id: string;
@@ -14,10 +14,10 @@ export type SiteNoteSource = {
 };
 
 export const siteNoteSources = (
-  staticSite: StaticSiteData | null,
+  sources: StaticSourceProjection[],
   agenda: AgendaSettings,
 ): SiteNoteSource[] =>
-  staticSite?.sources
+  sources
     .map((source) => {
       const document = documentViewFromStaticSource(source, agenda);
       return {
@@ -30,4 +30,4 @@ export const siteNoteSources = (
         records: noteRecords(document),
       };
     })
-    .filter((source) => source.records.length > 0) ?? [];
+    .filter((source) => source.records.length > 0);

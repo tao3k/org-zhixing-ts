@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "kind": "org-zhixing-ui-performance",
+  "source": "dist",
+  "iterations": 100,
+  "warmups": 5,
+  "budgets": {
+    "staticManifestBytes": 500000,
+    "sourceShardBytes": 2000000,
+    "largestSourceShardBytes": 800000,
+    "initialScriptBytes": 1500000,
+    "initialScriptCount": 4,
+    "travelPlacesBeforeVirtualization": 80,
+    "staticManifestParseP50Ms": 15,
+    "staticManifestParseP95Ms": 80,
+    "travelProjectionReadP95Ms": 1,
+    "eagerPhotoSwipeLightbox": false,
+    "eagerCssLineBreak": false,
+    "eagerTanStackVirtual": false,
+    "eagerTravelVirtualList": false
+  },
+  "metrics": {
+    "staticManifestBytes": 53927,
+    "sourceShardBytes": 1296018,
+    "sourceShardCount": 8,
+    "largestSourceShardBytes": 407338,
+    "largestSourceShard": "org-zhixing.sources/wallpaper-gallery.json",
+    "initialScriptBytes": 771675,
+    "initialScriptCount": 3,
+    "initialScripts": [
+      "assets/runtime.e359d4ef.js",
+      "assets/vendors-node_modules_smol-toml_dist_index_js.69fd2a69.js",
+      "assets/app.78aa8212.js"
+    ],
+    "travelPlaces": 22,
+    "travelSourceCount": 1,
+    "travelScannedSourceCount": 8,
+    "travelRegions": 11,
+    "eagerPhotoSwipeLightbox": false,
+    "eagerCssLineBreak": false,
+    "eagerTanStackVirtual": false,
+    "eagerTravelVirtualList": false,
+    "dynamicTanStackChunk": true,
+    "dynamicTravelVirtualListChunk": true,
+    "staticManifestParse": {
+      "name": "staticManifestParse",
+      "minMs": 0.1,
+      "p50Ms": 0.11,
+      "p95Ms": 1.65,
+      "maxMs": 5.99,
+      "avgMs": 0.39
+    },
+    "travelProjectionRead": {
+      "name": "travelProjectionRead",
+      "minMs": 0,
+      "p50Ms": 0,
+      "p95Ms": 0,
+      "maxMs": 0,
+      "avgMs": 0
+    }
+  },
+  "budgetResults": {
+    "staticManifestBytes": {
+      "actual": 53927,
+      "budget": 500000,
+      "pass": true
+    },
+    "sourceShardBytes": {
+      "actual": 1296018,
+      "budget": 2000000,
+      "pass": true
+    },
+    "largestSourceShardBytes": {
+      "actual": 407338,
+      "budget": 800000,
+      "pass": true
+    },
+    "initialScriptBytes": {
+      "actual": 771675,
+      "budget": 1500000,
+      "pass": true
+    },
+    "initialScriptCount": {
+      "actual": 3,
+      "budget": 4,
+      "pass": true
+    },
+    "staticManifestParseP50Ms": {
+      "actual": 0.11,
+      "budget": 15,
+      "pass": true
+    },
+    "staticManifestParseP95Ms": {
+      "actual": 1.65,
+      "budget": 80,
+      "pass": true
+    },
+    "travelProjectionReadP95Ms": {
+      "actual": 0,
+      "budget": 1,
+      "pass": true
+    },
+    "eagerPhotoSwipeLightbox": {
+      "actual": false,
+      "budget": false,
+      "pass": true
+    },
+    "eagerCssLineBreak": {
+      "actual": false,
+      "budget": false,
+      "pass": true
+    },
+    "travelVirtualizationThreshold": {
+      "actual": 22,
+      "budget": 80,
+      "pass": true
+    },
+    "eagerTanStackVirtual": {
+      "actual": false,
+      "budget": false,
+      "pass": true
+    },
+    "eagerTravelVirtualList": {
+      "actual": false,
+      "budget": false,
+      "pass": true
+    }
+  },
+  "recommendations": [
+    {
+      "area": "static-manifest-shards",
+      "signal": "entry manifest is 53 KiB; 8 source shards are 1.2 MiB",
+      "action": "Keep site-wide Gallery and Travel on compact projections; load full source shards only for source-scoped or Records views."
+    },
+    {
+      "area": "virtual-list-boundary",
+      "signal": "TanStack Virtual exists only as an on-demand chunk",
+      "action": "Keep Travel lists below the virtualization threshold on the plain static CSS path."
+    }
+  ]
+}

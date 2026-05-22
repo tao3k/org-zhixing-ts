@@ -1,0 +1,226 @@
+:PROPERTIES:
+:ID:       def16c41-6366-48af-b748-ef5a2f606313
+:END:
+#+TITLE: 游山玩水
+#+AUTHOR: GuangTao Zhang
+#+EMAIL: gtrunsec@hardenedlinux.org
+#+DATE: 2020-11-30 Mon 15:02
+
+#+TAGS: 民宿(M) 旅馆(l) 山川(s) 河流(h) 人文(r) 古迹(g) 古墓 美食(m)
+#+FILETAGS: :travel:
+
+- tags :: [[file:古墓文物.org][古墓文物]]
+
+* 游山玩水->浙江 :民宿:
+
+** TODO [[https://www.youtube.com/watch?v=vb1-lHR7kRM][Chinese Boutique B&B 中國最美民宿: Life Outside of the House - YouTube]]
+:PROPERTIES:
+:ID:       029912d8-e57d-4b81-a667-c7d9e726d8b0
+:END:
+
+ - [2020-11-30 Mon 17:08] <- [[id:40f4c77b-6871-483f-a378-a100449776af][莫干山镇]]
+
+
+#+begin_export html
+<div class="videoWrapper mb-4">
+  <iframe
+    src="https://www.youtube.com/embed/vb1-lHR7kRM"
+    width="653"
+    height="367"
+    frameborder="0"
+    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen>
+  </iframe>
+</div>
+#+end_export
+
+** TODO [[https://baike.baidu.com/item/%25E5%259C%2586%25E6%2598%258E%25E6%2596%25B0%25E5%259B%25AD/17330161?fromtitle=%25E5%259C%2586%25E6%2598%258E%25E5%259B%25AD&fromid=17247684][圆明新园（浙江横店圆明新园）_百度百科]]
+:PROPERTIES:
+:ID:       2b1a9b8b-ca59-4ca5-8adb-8ab6d342930d
+:END:
+- [2020-11-30 Mon 17:01] <- [[id:f851dc8f-e8be-4be9-9619-bced66bba2c1][横店镇]]
+
+
+
+** 丽水站
+:PROPERTIES:
+:位置:     位置
+:地理坐标: 坐标 ： 28°26′43.88″N 119°57′1.51″E ﻿/﻿ 28.4455222°N 119.9504194°E ﻿/28.4455222; 119.9504194
+:车站类别: 客货运站，技术性质: 中间站，业务性质: 客运、货运站
+:管辖机构: 上海铁路局 金华车务段
+:途经线路: 金温货线 新金温铁路 衢丽铁路 （规划 ）
+:车站代码: 98040 33297
+:电报码:   USH
+:拼音码:   LSH
+:车站等级: 二等站
+:wikinfo-id: 4341060
+:URL:      https://zh.wikipedia.org?curid=4341060
+:END:
+丽水站位于中国浙江省丽水市莲都区水东区块，建于 1997 年，是新金温铁路、金温货线上的中间站和二等客、货运站，距离金华站 126 公里，离温州站 136 公里。车站代码 98040。全站客货运开办 24 小时昼夜服务，日均客流大致在 8, 000 左右。
+* 游山玩水->云南
+:PROPERTIES:
+:ID:       f6eefa2a-f971-488e-a04d-6144c6ab06a3
+:END:
+- [2020-11-30 Mon 17:02] <- [[id:1ecc35c9-e3cf-49f8-8c1a-4975bd1632bb][云南]]
+
+** TODO [[https://www.youtube.com/watch?v=CIZZiV7knVM][民宿｜200 戶人的島上，這家小民宿卻來了 8000 多人 - YouTube]] 民宿:
+:PROPERTIES:
+:ID:       daa0ca48-73b5-490e-b139-2b9ce8d8969f
+:END:
+
+ - [2020-11-30 Mon 22:24] -> [[id:2fa03fb1-e5de-4068-8719-9fa46bb84ad1][洱海]]
+
+
+#+begin_export html
+<div class="videoWrapper mb-4">
+  <iframe
+    src="https://www.youtube.com/embed/CIZZiV7knVM"
+    width="653"
+    height="367"
+    frameborder="0"
+    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen>
+  </iframe>
+</div>
+#+end_export
+
+
+** TODO 摩梭人 :人文:
+:PROPERTIES:
+:wikinfo-id: 524239
+:URL:      https://zh.wikipedia.org?curid=524239
+:ID:       d72d60b8-69bf-42e8-81d8-c5357543cee3
+:END:
+- [2020-11-30 Mon 15:48] <- [[id:b2544e13-2358-4a61-a0f1-27e3afd9271d][泸沽湖]]
+摩梭人主要居住于中国四川省凉山彝族自治州盐源县和木里县与云南省丽江市宁蒗彝族自治县之间的泸沽湖畔，自称“纳”、“纳日”、“纳恒”等。云南摩梭人被划为纳西族，四川摩梭人被劃为蒙古族。截至 2007 年，摩梭人共有 4 万左右人口。
+
+** TODO [[https://www.youtube.com/watch?v=l-E95bDiGHg][中国独树一帜的秘境酒店！ - YouTube]] :旅馆:
+:PROPERTIES:
+:ID:       03bae2bb-3c7c-48df-bf4b-b7990dc7b19f
+:END:
+ - [2020-11-30 Mon 22:16] -> [[id:aa63df48-04d9-4525-8aed-6ee11a89a983][香格里拉市]]
+
+#+begin_export html
+<div class="videoWrapper mb-4">
+  <iframe
+    src="https://www.youtube.com/embed/l-E95bDiGHg"
+    width="653"
+    height="367"
+    frameborder="0"
+    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen>
+  </iframe>
+</div>
+#+end_export
+
+* 游山玩水->山西
+:PROPERTIES:
+:ID:       089589f4-c772-42ac-be81-a7fcd581c7e3
+:END:
+- [2020-11-30 Mon 15:35] <- [[id:f658b210-e699-43d2-acd1-e246056842d7][山西]]
+** TODO  [[https://www.youtube.com/watch?v=PiIWla8mXuU][“中國第一國寶，藏在山西深山 - YouTube”🔊]]
+:PROPERTIES:
+:ID:       300cf94c-05fe-4c37-a1ab-279a58dce131
+:END:
+
+
+ - [2020-11-30 Mon 22:18] -> [[id:d72fd310-ede1-49b9-942e-42a9010394ea][佛光寺 (五台)]]
+
+
+#+begin_export html
+<div class="videoWrapper mb-4">
+  <iframe
+    src="https://www.youtube.com/embed/PiIWla8mXuU"
+    width="653"
+    height="367"
+    frameborder="0"
+    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen>
+  </iframe>
+</div>
+#+end_export
+
+** TODO 湘峪古城
+:PROPERTIES:
+:ID:       30d98094-dfda-4af9-99d6-95d03112b3d1
+:END:
+- [2020-11-30 Mon 15:38] <- [[id:ebaaf433-da10-40c0-a85b-7a28667d01ee][湘峪村]]
+
+* 游山玩水->西藏
+:PROPERTIES:
+:ID:       ca4d0f62-84f5-4d83-b7f5-189b8fbb225a
+:END:
+- [2021-01-08 Fri 16:01] <- [[id:ab6f6b96-3961-4d28-a027-3f3ce0854b9e][“亲眼看到的珠峰，居然和印象中大不一样！生态脆弱，大风可怕【旅行嘉日记】 - YouTube”🔊]]
+- [2021-01-06 Wed 23:05] <- [[id:554af770-12a2-4421-ad79-c48cad8e7241][262集 寻找藏地神山，误入措普沟偶遇藏族卓玛｜冒险雷探长Lei's adventure - YouTube]]
+- [2021-01-04 Mon 23:16] -> [[id:6d48d9c6-724e-4ac8-9fd6-14c7d0b015a9][寻找喜马拉雅深处神秘泉水，海拔5000多靠近印度，居然被警察护送【旅行嘉日记】 - YouTube]]
+- [2020-11-30 Mon 15:50] -> [[id:3e5e0204-f4d4-4a38-8b59-81443cf63d7f][西藏自治区]]
+
+
+* 游山玩水->杭州
+:PROPERTIES:
+:ID:       6b2a660d-169a-452d-ab31-5c7985ee45e0
+:END:
+- [2020-11-30 Mon 15:54] <- [[id:44546d9d-4f0d-4eeb-8197-29f74c097787][杭州市]]
+** [[https://www.youtube.com/watch?v=lur6sbfZ_qE][Chinese Boutique B&B 中國最美民宿：杭州郊外，5 間房，一對文藝夫妻 - YouTube]] :民宿:
+:PROPERTIES:
+:ID:       637a3439-a881-48a0-b0a0-327f297014c4
+:END:
+
+- [2020-11-30 Mon 15:55] <- [[id:44546d9d-4f0d-4eeb-8197-29f74c097787][杭州市]]
+
+
+#+begin_export html
+<div class="videoWrapper mb-4">
+  <iframe
+    src="https://www.youtube.com/embed/lur6sbfZ_qE"
+    width="653"
+    height="367"
+    frameborder="0"
+    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen>
+  </iframe>
+</div>
+#+end_export
+
+* 游山玩水->北京
+:PROPERTIES:
+:ID:       9a385f09-b076-4dbb-9efc-f73f0c114565
+:END:
+- [2020-11-30 Mon 16:21] <- [[id:01cfe840-090b-4cad-9a10-e830ca8e0dc4][北京市]]
+** TODO [[https://www.youtube.com/watch?v=67vEE06mor8][《百年字号》之《鹤寿延年》Beijing's Time Honored Brand He Nian Tang - YouTube]] [鹤年堂] :人文:
+:PROPERTIES:
+:ID:       423bcb0c-a025-4dd1-81d3-179ffb763582
+:END:
+- [2020-11-30 Mon 16:22] <- [[id:01cfe840-090b-4cad-9a10-e830ca8e0dc4][北京市]]
+
+* 游山玩水->河南
+:PROPERTIES:
+:ID:       f5680ef0-c9ec-42fe-a9c5-b3c5f2ce0d1a
+:END:
+- [2020-12-10 Thu 01:35] <- [[id:5b762e77-4305-4b49-b496-13c9cd394175][实拍世界著名佛教寺院 少林寺，近距离观看少林寺最神秘的方丈室 - YouTube]]
+- [2020-11-30 Mon 16:23] <- [[id:b12e283d-1699-4bde-9fdc-aabcbd03ca4d][河南]]
+- [2020-11-30 Mon 16:23] -> [[id:699789e3-99f6-48ca-8ead-2627462af658][少林寺]]
+
+** 稠禅师少林功夫起源 :人文:
+:PROPERTIES:
+:ID:       66ecbfa4-3d1f-4d61-ba21-39c3489e1c90
+:END:
+ - [2020-11-30 Mon 22:19] -> [[id:699789e3-99f6-48ca-8ead-2627462af658][少林寺]]
+
+* 游山玩水->海南岛
+:PROPERTIES:
+:ID:       091af540-7e52-42b1-b321-cf14b0f56bfc
+:END:
+
+* 游山玩水->南京
+:PROPERTIES:
+:ID:       2c442b30-fb8e-499a-8593-c0cf1a7e685a
+:END:
+ - [2020-12-11 Fri 00:22] -> [[id:81aa75f5-5b39-4b7f-a9e7-f949c23d13b0][真不愧是朱元璋儿子的陵墓，地宫大的惊人，墓室上方盗洞真精准啊 - YouTube]]
+
+* 游山玩水->福州
+:PROPERTIES:
+:ID:       10c0fc8d-90b1-4787-8a0b-6cb8b29dd57e
+:END:
+ - [2021-01-04 Mon 16:27] -> [[id:958b54ef-c60f-4d3c-8c41-6a90ea061052][“福州的5A景区三坊七巷你去过吗？福州人太幸福了，因为美食太多了 - YouTube”🔊]]
+* 游山玩水->厦门

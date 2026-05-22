@@ -6,7 +6,7 @@ export type SiteConfig = {
   title: string;
   locale: string;
   contentRoot: string;
-  defaultSourceId: string;
+  defaultSourceId: string | null;
   defaultView: ViewKey;
   agenda: AgendaSettings;
   attachments: AttachmentSettings;
@@ -86,7 +86,9 @@ export const resolveInitialSource = (config: SiteConfig): SourceItem => {
   if (candidate) {
     return sourceFromUserPath(config, candidate);
   }
-  return config.sources.find((source) => source.id === config.defaultSourceId) ?? config.sources[0];
+  return config.defaultSourceId
+    ? sourceFromUserPath(config, config.defaultSourceId)
+    : config.sources[0];
 };
 
 export const sourceFromUserPath = (config: SiteConfig, path: string): SourceItem => {
@@ -120,9 +122,11 @@ const parseSiteConfig = (source: string): SiteConfig => {
   const ui = asOptionalRecord(raw.ui);
   const agenda = parseAgenda(asOptionalRecord(raw.agenda));
   const behavior = parseBehavior(asOptionalRecord(raw.behavior), ui);
-  const contentRoot = normalizeDir(readString(content, "root", defaultContentDir));
+  const contentRoot = normalizeDir(
+    readString(content, "content_dir", readString(content, "root", defaultContentDir)),
+  );
   const attachments = parseAttachments(asOptionalRecord(raw.attachments), contentRoot);
-  const defaultSource = readString(content, "default_source", defaultSourceId);
+  const defaultSource = readOptionalString(content, "default_source");
   const sources = parseSources(asOptionalRecord(raw.content)?.sources, contentRoot);
 
   return {
@@ -234,6 +238,7 @@ const defaultMenu = (): MenuItem[] => [
   { name: "Blog", view: "blog", weight: 10 },
   { name: "Gallery", view: "gallery", weight: 18 },
   { name: "Notes", view: "records", weight: 20 },
+  { name: "Travel", view: "travel", weight: 22 },
   { name: "Memory", view: "memory", weight: 25 },
   { name: "Agenda", view: "agenda", weight: 30 },
 ];
@@ -310,6 +315,11 @@ const readString = (record: TomlRecord | null, key: string, fallback: string): s
   return typeof value === "string" && value.length > 0 ? value : fallback;
 };
 
+const readOptionalString = (record: TomlRecord | null, key: string): string | null => {
+  const value = record?.[key];
+  return typeof value === "string" && value.length > 0 ? value : null;
+};
+
 const readBoolean = (record: TomlRecord | null, key: string, fallback: boolean): boolean => {
   const value = record?.[key];
   return typeof value === "boolean" ? value : fallback;
@@ -381,6 +391,7 @@ const isViewKey = (value: unknown): value is ViewKey =>
   value === "gallery" ||
   value === "records" ||
   value === "memory" ||
+  value === "travel" ||
   value === "agenda" ||
   value === "capture" ||
   value === "diagnostics";

@@ -1,0 +1,12 @@
+* Performance Reports
+
+This directory contains Git-tracked performance receipts for Org Zhixing.
+
+- =org-zhixing-wasm.json= is produced by =npm run perf:wasm=.
+- =org-zhixing-ui.json= is produced by =npm run perf:ui= after a production
+  build.  It covers the compact entry manifest, per-source shard inventory,
+  eager script inventory, and lazy dependency leaks.
+
+The reports intentionally live in docs instead of =.cache=.  They are reviewable
+artifacts: budgets, current measurements, and recommendations should move
+together when the performance surface changes.

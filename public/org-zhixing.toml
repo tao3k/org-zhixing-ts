@@ -3,43 +3,7 @@ title = "知行合一"
 locale = "zh-CN"
 
 [content]
-root = "blog"
-default_source = "wallpaper-gallery"
-
-[[content.sources]]
-id = "syntax-atlas"
-title = "Org Syntax Atlas"
-file = "org-syntax-atlas.org"
-
-[[content.sources]]
-id = "wallpaper-gallery"
-title = "Wallpaper Attachment Gallery"
-file = "wallpaper-gallery.org"
-
-[[content.sources]]
-id = "demo"
-title = "Org Zhixing Demo"
-file = "org-zhixing-demo.org"
-
-[[content.sources]]
-id = "agenda-lab"
-title = "Agenda Lab Notes"
-file = "org-agenda-lab.org"
-
-[[content.sources]]
-id = "zen-essay"
-title = "Zen Essay Notebook"
-file = "org-zen-essay.org"
-
-[[content.sources]]
-id = "literate-lab"
-title = "Literate Systems Lab"
-file = "org-literate-lab.org"
-
-[[content.sources]]
-id = "research-notebook"
-title = "Research Notebook"
-file = "org-research-notebook.org"
+content_dir = "blog"
 
 [ui]
 default_view = "gallery"
@@ -64,6 +28,11 @@ weight = 20
 id = "memory"
 label = "Memory"
 weight = 25
+
+[[ui.views]]
+id = "travel"
+label = "Travel"
+weight = 28
 
 [[ui.views]]
 id = "agenda"

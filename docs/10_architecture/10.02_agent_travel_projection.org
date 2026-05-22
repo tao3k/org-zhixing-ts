@@ -1,0 +1,92 @@
+* 10.02 Agent Travel Projection
+
+The Travel view is an Agent-facing projection over ordinary Org headings.  It
+does not introduce new Org syntax and it does not require a map-specific config
+registry.  The source of truth remains the Org file.
+
+** Input Signals
+
+Travel candidates come from the Rust-owned section index.  TypeScript consumes
+parser DTOs and derives a narrow view model from:
+
+- =#+FILETAGS: :travel:= or inherited =travel= tags;
+- region headings such as =游山玩水->浙江= and parser-provided outline paths
+  below those headings;
+- ordinary property drawer values such as =GEO_LAT=, =GEO_LON=,
+  =GOOGLE_MAPS_QUERY=, =GOOGLE_PLACE_ID=, =TRAVEL_REGION=, =地理坐标=, =URL=, and
+  =wikinfo-id=;
+- ordinary Org links reported by the parser in titles and body text.
+
+The projection deliberately does not keep its own category tag allowlist.  Tags
+such as =民宿= or =美食= remain parser-owned facts and are displayed as tags, but
+they do not by themselves admit an unrelated heading into Travel.
+
+** Projection Shape
+
+Each projected place contains:
+
+| Field | Meaning |
+|-------+---------|
+| =title= | Org heading title |
+| =outline= | source outline path |
+| =region= | parsed travel region or inherited current region |
+| =tags= | effective Org tags |
+| =kind= | region or place unless a future parser-owned contract supplies a richer type |
+| =coordinates= | decimal latitude and longitude when available |
+| =query= | stable Google Maps search query |
+| =googleMapsUrl= | browser-safe Google Maps URL |
+| =sourceLinks= | source URLs classified as video, wiki, or web |
+| =evidence= | coordinates, place hints, properties, and capture timestamps |
+| =enrichFields= | missing Org property fields an Agent may propose |
+
+The Google Maps URL uses Google's documented Maps URL shape:
+
+#+begin_src text
+https://www.google.com/maps/search/?api=1&query=<encoded query>
+#+end_src
+
+When =GOOGLE_PLACE_ID= is present, the projection also supplies
+=query_place_id=.  This follows the official Google Maps URLs contract while
+keeping the Org file independent of a Google-specific parser.
+
+** Query Policy
+
+The query should be stable and geographic:
+
+1. explicit =GOOGLE_MAPS_QUERY= wins;
+2. coordinates win over text hints;
+3. region headings query the parsed region itself, not arbitrary body links;
+4. child headings may use useful =id:= link descriptions as place hints;
+5. video or article-like link labels are evidence, not map queries;
+6. when a child place does not include its region name, the query appends the
+   inherited region.
+
+This prevents old article or video titles from becoming the map identity for a
+place card.
+
+** Enrichment Contract
+
+Agents may propose ordinary property drawer edits when =enrichFields= lists
+missing values:
+
+#+begin_src org
+:PROPERTIES:
+:GEO_LAT: 28.4455222
+:GEO_LON: 119.9504194
+:GOOGLE_MAPS_QUERY: 丽水站
+:GOOGLE_PLACE_ID: ...
+:TRAVEL_REGION: 浙江
+:END:
+#+end_src
+
+The projection only exposes candidates.  It does not write files.  A downstream
+runtime must confirm the change, acquire the host-owned git write lock, resolve
+the repo-relative source path, and apply the Org edit.
+
+** Real Fixture
+
+=public/blog/travel.org= is copied from the user's real
+=游山玩水.org= notes and marked with =#+FILETAGS: :travel:=.  It verifies that the
+projection works against mixed Chinese headings, inherited regions, timestamped
+body links, wiki links, YouTube links, coordinates in a Chinese property, and
+ordinary Org property drawers.

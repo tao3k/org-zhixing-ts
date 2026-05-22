@@ -7,6 +7,7 @@ const projectRoot = dirname(fileURLToPath(import.meta.url));
 const orgizePackageRoot = resolve(projectRoot, "node_modules/orgize");
 const publicRoot = resolve(projectRoot, "public");
 const staticManifestPath = resolve(projectRoot, ".cache/org-zhixing/static-site.json");
+const staticSourceShardRoot = resolve(projectRoot, ".cache/org-zhixing/org-zhixing.sources");
 const orgizePackageWatchFiles = existsSync(orgizePackageRoot)
   ? [
       resolve(orgizePackageRoot, "worker.js"),
@@ -75,6 +76,14 @@ export default (_env, argv) => {
           { from: publicRoot, to: "." },
           ...(existsSync(staticManifestPath)
             ? [{ from: staticManifestPath, to: "org-zhixing.static.json" }]
+            : []),
+          ...(existsSync(staticSourceShardRoot)
+            ? [
+                {
+                  from: resolve(staticSourceShardRoot, "*.json"),
+                  to: "org-zhixing.sources/[name][ext]",
+                },
+              ]
             : []),
         ],
       }),

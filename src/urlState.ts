@@ -4,7 +4,7 @@ import type { AgendaModeKey } from "./config";
 import type { ViewKey } from "./model";
 
 export type AppUrlState = {
-  source?: string;
+  source?: string | null;
   view: ViewKey;
   agendaMode: AgendaModeKey;
   agendaPanel: AgendaPanelKey;
@@ -14,7 +14,9 @@ export type AppUrlState = {
 
 export const writeAppUrlState = (state: AppUrlState): void => {
   const url = new URL(window.location.href);
-  if (state.source) {
+  if (state.source === null) {
+    url.searchParams.delete("source");
+  } else if (state.source) {
     url.searchParams.set("source", state.source);
   }
   url.searchParams.set("view", state.view);

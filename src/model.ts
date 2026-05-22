@@ -16,6 +16,7 @@ export type ViewKey =
   | "gallery"
   | "records"
   | "memory"
+  | "travel"
   | "agenda"
   | "capture"
   | "diagnostics";

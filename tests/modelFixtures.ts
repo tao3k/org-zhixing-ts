@@ -36,15 +36,25 @@ export const record = ({
 
 export const sectionRecord = ({
   body = [],
+  effectiveTags = [],
+  level = 1,
+  links = [],
   outlinePath,
   outlinePathText,
+  properties = [],
   rangeStart,
+  tags = [],
   title,
 }: {
   body?: OrgizeTextSliceDto[];
+  effectiveTags?: string[];
+  level?: number;
+  links?: OrgizeSectionIndexRecordDto["links"];
   outlinePath?: string[];
   outlinePathText?: string[];
+  properties?: OrgizeSectionIndexRecordDto["properties"];
   rangeStart: number;
+  tags?: string[];
   title: string;
 }): OrgizeSectionIndexRecordDto => {
   const titleText = title.replace(/\[\[[^\]]+\]\[([^\]]+)\]\]/g, "$1");
@@ -52,7 +62,7 @@ export const sectionRecord = ({
     source: sourceRange(rangeStart),
     outlinePath: outlinePath ?? [title],
     outlinePathText: outlinePathText ?? [titleText],
-    level: 1,
+    level,
     title,
     titleText,
     body,
@@ -69,9 +79,9 @@ export const sectionRecord = ({
       },
     },
     category: null,
-    tags: [],
-    effectiveTags: [],
-    properties: [],
+    tags,
+    effectiveTags,
+    properties,
     effectiveProperties: [],
     specialProperties: [],
     planning: {},
@@ -83,7 +93,7 @@ export const sectionRecord = ({
     attachment: {
       hasAttachTag: false,
     },
-    links: [],
+    links,
     targets: [],
     lifecycle: [],
   };

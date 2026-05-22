@@ -20,11 +20,7 @@ export const attachmentPublicPath = (
   return joinPath(dirname(sourceFile), joined);
 };
 
-export const normalizePublicPath = (value: string): string =>
-  value
-    .replace(/^.*\/public\//, "")
-    .replace(/^\.?\//, "")
-    .replace(/^\/+/, "");
+export const normalizePublicPath = (value: string): string => publicSegments(value).join("/");
 
 export const basename = (path: string): string => {
   const normalized = normalizePublicPath(path);
@@ -37,8 +33,10 @@ const dirname = (path: string): string => {
   return slash === -1 ? "" : normalized.slice(0, slash);
 };
 
-const joinPath = (...parts: string[]): string =>
-  parts
-    .map((part) => part.replace(/^\/+|\/+$/g, ""))
-    .filter(Boolean)
-    .join("/");
+const joinPath = (...parts: string[]): string => parts.flatMap(publicSegments).join("/");
+
+const publicSegments = (value: string): string[] => {
+  const segments = value.split("/").filter((segment) => segment.length > 0 && segment !== ".");
+  const publicIndex = segments.lastIndexOf("public");
+  return publicIndex === -1 ? segments : segments.slice(publicIndex + 1);
+};

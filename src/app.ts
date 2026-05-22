@@ -6,12 +6,7 @@ import {
   type BlogReaderState,
 } from "./blogState";
 import {
-  loadSiteConfig,
   publicAssetUrl,
-  resolveInitialAgendaMode,
-  resolveInitialSource,
-  resolveInitialView,
-  showPerformanceFromUrl,
   sourceFromUserPath,
   type AgendaModeKey,
   type SiteConfig,
@@ -19,9 +14,10 @@ import {
 } from "./config";
 import type { AgendaPanelKey } from "./agendaTypes";
 import { projectAgendaDocument } from "./appAgendaProjection";
-import { resolveInitialAgendaPanel, resolveInitialAgendaRuleId } from "./agendaState";
+import { loadAppBootState } from "./appBoot";
 import { bindAppDom, type AppDomNodes } from "./appDom";
 import { bindAppEvents } from "./appEvents";
+import { attachmentGalleryFromSources } from "./attachmentGalleryModel";
 import {
   configureChrome,
   renderSourceOptionsToDom,
@@ -44,14 +40,17 @@ import { renderAppShell } from "./appShell";
 import { renderStats, renderView } from "./render";
 import {
   documentViewFromStaticSource,
-  loadStaticSiteData,
-  staticSourceFor,
+  loadAllStaticSources,
+  loadStaticSourceFor,
   type StaticSiteData,
+  type StaticSourceProjection,
 } from "./staticSiteData";
-import { siteNoteSources } from "./siteNotes";
+import { siteNoteSources, type SiteNoteSource } from "./siteNotes";
+import { travelViewFromStaticSite } from "./travelSiteProjection";
 import { writeAppUrlState } from "./urlState";
 import { viewCacheKey } from "./viewCache";
 import type { ViewKey } from "./model";
+import type { AttachmentGalleryView } from "./attachmentGalleryModel";
 
 export type OrgZhixingAppOptions = Pick<OrgizeSessionOptions, "createWorker">;
 export type OrgZhixingAppHandle = { dispose: () => void };
@@ -77,6 +76,9 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
   #blog: BlogReaderState = initialBlogReaderState();
   #siteConfig: SiteConfig | null = null;
   #staticSite: StaticSiteData | null = null;
+  #staticSources: StaticSourceProjection[] | null = null;
+  #siteAttachmentGallery: AttachmentGalleryView | null = null;
+  #siteNotes: SiteNoteSource[] | null = null;
   #sourceItem: SourceItem | null = null;
   #documentView: OrgizeDocumentView | null = null;
   #renderedHtml = "";
@@ -120,7 +122,7 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
         }
         const nextSource = sourceFromUserPath(this.#siteConfig, sourceFile);
         this.#blog.articleRangeStart = null;
-        this.#writeUrlState(nextSource.file);
+        this.#writeUrlState();
         void this.#loadSource(nextSource);
       },
       onSourceFeed: (sourceId) => {
@@ -128,7 +130,7 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
         const nextSource = sourceFromUserPath(this.#siteConfig, sourceId);
         this.#agendaRuleId = null;
         this.#blog.articleRangeStart = null;
-        this.#writeUrlState(nextSource.file);
+        this.#writeUrlState();
         void this.#loadSource(nextSource);
       },
       onAgendaMode: (mode) => {
@@ -169,15 +171,21 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
 
   async #boot(): Promise<void> {
     try {
-      this.#siteConfig = await loadSiteConfig();
-      this.#staticSite = await loadStaticSiteData();
-      this.#showPerformance = showPerformanceFromUrl(this.#siteConfig.behavior.showPerformance);
-      this.#currentView = resolveInitialView(this.#siteConfig);
-      this.#agendaMode = resolveInitialAgendaMode(this.#siteConfig);
-      this.#agendaPanel = resolveInitialAgendaPanel();
-      this.#agendaRuleId = resolveInitialAgendaRuleId();
+      const boot = await loadAppBootState();
+      this.#siteConfig = boot.siteConfig;
+      this.#staticSite = boot.staticSite;
+      this.#siteAttachmentGallery = boot.staticSite?.attachmentGallery ?? null;
+      this.#showPerformance = boot.showPerformance;
+      this.#currentView = boot.currentView;
+      this.#agendaMode = boot.agendaMode;
+      this.#agendaPanel = boot.agendaPanel;
+      this.#agendaRuleId = boot.agendaRuleId;
+      if (this.#staticSite) {
+        travelViewFromStaticSite(this.#staticSite);
+      }
       configureChrome(this.#dom, this.#siteConfig, this.#currentView, this.#sourceItem);
-      await this.#loadSource(resolveInitialSource(this.#siteConfig));
+      await this.#loadSource(boot.initialSource);
+      this.#writeUrlState();
     } catch (error) {
       this.#reportError(error);
     }
@@ -199,7 +207,10 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
     this.#articleMessage = "Loading Org source...";
     this.#render();
 
-    const staticSource = staticSourceFor(this.#staticSite, nextSource);
+    const staticSource = await loadStaticSourceFor(this.#staticSite, nextSource);
+    if (version !== this.#documentVersion) {
+      return;
+    }
     if (staticSource && this.#siteConfig) {
       const startedAt = performance.now();
       this.#documentView = documentViewFromStaticSource(staticSource, this.#siteConfig.agenda);
@@ -209,6 +220,10 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
       this.#articleMessage = "";
       this.#timings = { staticMs: performance.now() - startedAt };
       this.#viewCache.clear();
+      await this.#refreshCurrentViewDependencies(version);
+      if (version !== this.#documentVersion) {
+        return;
+      }
       this.#updateStatus();
       this.#render();
       return;
@@ -268,6 +283,14 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
   async #refreshCurrentViewDependencies(version: number): Promise<void> {
     if (this.#currentView === "diagnostics") {
       await this.#refreshLintIfNeeded();
+    }
+    if (this.#currentView === "gallery" && this.#staticSite) {
+      await this.#refreshSiteAttachmentGalleryIfNeeded();
+      return;
+    }
+    if (this.#currentView === "records" && this.#staticSite && this.#siteConfig) {
+      await this.#refreshSiteNotesIfNeeded();
+      return;
     }
     if (this.#currentView === "agenda") {
       await this.#refreshAgendaIfNeeded();
@@ -374,6 +397,38 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
     this.#pendingMessage = "";
   }
 
+  async #refreshSiteAttachmentGalleryIfNeeded(): Promise<void> {
+    if (this.#siteAttachmentGallery || !this.#staticSite) {
+      return;
+    }
+    this.#pendingMessage = "Loading static attachment gallery...";
+    this.#render();
+    const sources = await this.#loadAllStaticSources();
+    this.#siteAttachmentGallery = attachmentGalleryFromSources(sources);
+    this.#viewCache.clear();
+    this.#pendingMessage = "";
+  }
+
+  async #refreshSiteNotesIfNeeded(): Promise<void> {
+    if (this.#siteNotes || !this.#staticSite || !this.#siteConfig) {
+      return;
+    }
+    this.#pendingMessage = "Loading static notes...";
+    this.#render();
+    const sources = await this.#loadAllStaticSources();
+    this.#siteNotes = siteNoteSources(sources, this.#siteConfig.agenda);
+    this.#viewCache.clear();
+    this.#pendingMessage = "";
+  }
+
+  async #loadAllStaticSources(): Promise<StaticSourceProjection[]> {
+    if (this.#staticSources) {
+      return this.#staticSources;
+    }
+    this.#staticSources = await loadAllStaticSources(this.#staticSite);
+    return this.#staticSources;
+  }
+
   async #refreshCaptureIfNeeded(): Promise<void> {
     if (this.#documentView?.capturePlan || !this.#documentView || !this.#sourceItem) {
       return;
@@ -426,14 +481,6 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
   #render(): void {
     this.#root.dataset.view = this.#currentView;
     this.#root.dataset.readerMode = readerModeFor(this.#currentView, this.#blog);
-    if (this.#pendingMessage || !this.#documentView) {
-      this.#dom.view.innerHTML = renderView({
-        view: this.#currentView,
-        document: this.#documentView,
-        pendingMessage: this.#pendingMessage,
-      });
-      return;
-    }
     const cacheKey = viewCacheKey({
       agendaMode: this.#agendaMode,
       agendaPanel: this.#agendaPanel,
@@ -441,7 +488,13 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
       blog: this.#blog,
       document: this.#documentView,
       renderedHtml: this.#renderedHtml,
-      sourceItem: this.#sourceItem,
+      sourceItem:
+        this.#staticSite &&
+        (this.#currentView === "gallery" ||
+          this.#currentView === "records" ||
+          this.#currentView === "travel")
+          ? null
+          : this.#sourceItem,
       view: this.#currentView,
     });
     let html = this.#viewCache.get(cacheKey);
@@ -451,13 +504,22 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
         document: this.#documentView,
         articleHtml: this.#renderedHtml,
         articleMessage: this.#articleMessage,
+        attachmentGallery:
+          this.#currentView === "gallery" && this.#staticSite
+            ? this.#siteAttachmentGallery
+            : undefined,
         blogArticleRangeStart: this.#blog.articleRangeStart,
         blogZenMode: this.#blog.zenMode,
         siteNotes:
           this.#currentView === "records" && this.#staticSite && this.#siteConfig
-            ? siteNoteSources(this.#staticSite, this.#siteConfig.agenda)
+            ? this.#siteNotes
+            : undefined,
+        travelView:
+          this.#currentView === "travel" && this.#staticSite && this.#siteConfig
+            ? travelViewFromStaticSite(this.#staticSite)
             : undefined,
         sourceFile: this.#sourceItem?.sourceFile,
+        pendingMessage: this.#pendingMessage,
         agendaMode: this.#agendaMode,
         agendaPanel: this.#agendaPanel,
         agendaRuleId: this.#agendaRuleId,
@@ -476,12 +538,19 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
   }
 
   #updateStatus(): void {
-    this.#dom.status.value = renderStats(this.#documentView, this.#timings, this.#showPerformance);
+    this.#dom.status.value = renderStats(
+      this.#documentView,
+      this.#timings,
+      this.#showPerformance,
+      this.#currentView === "gallery" && this.#staticSite
+        ? (this.#siteAttachmentGallery ?? undefined)
+        : undefined,
+    );
   }
 
-  #writeUrlState(nextSource = this.#sourceItem?.file): void {
+  #writeUrlState(source: string | null = null): void {
     writeAppUrlState({
-      source: nextSource,
+      source,
       view: this.#currentView,
       agendaMode: this.#agendaMode,
       agendaPanel: this.#agendaPanel,

@@ -6,7 +6,7 @@ import { renderSoftBreakText } from "../src/typographicText";
 import { memoryResponse, record, sourceRange } from "./modelFixtures";
 
 describe("typographic text rendering", () => {
-  it("adds CSS line-break opportunities while escaping unsafe text", () => {
+  it("adds soft break opportunities while escaping unsafe text", () => {
     const html = renderSoftBreakText(
       "attachment:20201219_162324george-turmanidze-10.jpg.jpeg?<unsafe>",
     );

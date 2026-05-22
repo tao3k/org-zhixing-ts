@@ -1,0 +1,61 @@
+* 10.01 Content Directory Contract
+
+Org Zhixing loads content through a directory entrypoint, not a hand-maintained
+list of Org files in TOML.
+
+** Configuration Shape
+
+The current config surface is:
+
+#+begin_src toml
+[content]
+content_dir = "blog"
+#+end_src
+
+The static generator recursively discovers =*.org= files under
+=public/<content_dir>=.  Source ids, names, and source paths are derived from the
+file path unless an older fixture still supplies an explicit
+=[[content.sources]]= table.
+
+** Rationale
+
+This mirrors the useful part of Hugo's content model: the config names the
+content root, while files inside that root own their own semantics.  Org files
+carry titles, tags, properties, timestamps, links, and heading structure; TOML
+should not become a second content registry.
+
+Org Zhixing therefore does not require:
+
+- a =files = [...]= list;
+- a =file = "...org"= field per source in the main config;
+- =default_source= in the main config.
+
+The first source comes from the generated static manifest unless the URL
+explicitly requests =?source=...=.  The browser still accepts legacy
+=[[content.sources]]= tables so older fixtures continue to run, but new content
+should be added by creating or copying an Org file under =public/blog/=.
+
+** Generator Contract
+
+The static generator owns:
+
+- recursive traversal under =content_dir=;
+- path-derived source ids and display names;
+- legacy explicit-source override when present;
+- writing =org-zhixing.static.json= as the compact entry manifest with
+  =sourceFile= values such as =blog/travel.org=;
+- writing full per-source projections under =org-zhixing.sources/*.json= so
+  large HTML, section, memory, agenda, lint, and attachment DTOs can be loaded
+  only when a view needs them.
+
+The browser runtime owns:
+
+- hydrating source navigation from the static manifest;
+- hydrating site-wide Gallery and Travel from compact entry-manifest
+  projections;
+- loading source shards on demand for source-scoped views and site-wide Notes;
+- honoring =?source=...= when a user or Agent requests a source;
+- falling back to the worker path when the static manifest is unavailable.
+
+No local absolute path should enter the browser DTO.  Host runtimes that mutate
+Org files must resolve repository paths and acquire their own git write lock.

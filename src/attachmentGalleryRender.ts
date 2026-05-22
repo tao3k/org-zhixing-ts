@@ -1,63 +1,48 @@
 import { attachmentPublicUrl, basename } from "./attachmentPaths";
-import {
-  attachmentDisplayRecords,
-  type AttachmentDisplayRecord,
-  type OrgizeDocumentView,
-} from "./model";
+import type { AttachmentGalleryRecord, AttachmentGalleryView } from "./attachmentGalleryModel";
+import type { AttachmentDisplayRecord } from "./model";
 
-export const renderAttachmentGallery = (
-  document: OrgizeDocumentView,
-  sourceFile: string | undefined,
-): string => {
-  const inventory = document.attachmentInventory;
-  if (!inventory) {
+export const renderAttachmentGallery = (gallery: AttachmentGalleryView | null): string => {
+  if (!gallery) {
     return `<div class="empty">Loading attachment gallery...</div>`;
   }
-  const records = attachmentDisplayRecords(document);
+  const { records } = gallery;
   if (records.length === 0) {
     return `
       <section class="attachment-gallery" aria-label="Attachment gallery">
-      ${renderAttachmentGalleryHeader(0, 0, inventory.entries.length, sourceFile)}
-        <div class="empty">No attachment-backed media found in this Org source.</div>
+        ${renderAttachmentGalleryHeader(gallery)}
+        <div class="empty">${escapeHtml(emptyMessage(gallery))}</div>
       </section>
     `;
   }
-  const imageCount = records.filter((record) => record.mediaKind === "image").length;
   return `
     <section class="attachment-gallery" aria-label="Attachment gallery">
-      ${renderAttachmentGalleryHeader(records.length, imageCount, inventory.entries.length, sourceFile)}
+      ${renderAttachmentGalleryHeader(gallery)}
       <div class="attachment-grid">
-        ${records.map((record, index) => renderAttachmentCard(record, sourceFile, index)).join("")}
+        ${records.map((record, index) => renderAttachmentCard(record, index)).join("")}
       </div>
     </section>
   `;
 };
 
-const renderAttachmentGalleryHeader = (
-  displayCount: number,
-  imageCount: number,
-  entryCount: number,
-  sourceFile: string | undefined,
-): string => `
+const renderAttachmentGalleryHeader = (gallery: AttachmentGalleryView): string => `
   <header class="attachment-gallery-header">
     <div>
       <p class="eyebrow">Org attachments</p>
       <h2>Attachment gallery</h2>
-      <p>${escapeHtml(
-        `${displayCount} display items from ${entryCount} semantic attachment records in ${sourceLabel(sourceFile)}; ${imageCount} are image media.`,
-      )}</p>
+      <p>${escapeHtml(gallerySummary(gallery))}</p>
     </div>
     <dl class="attachment-metrics" aria-label="Attachment gallery metrics">
-      <div><dt>Display</dt><dd>${displayCount}</dd></div>
-      <div><dt>Images</dt><dd>${imageCount}</dd></div>
-      <div><dt>Sources</dt><dd>${entryCount}</dd></div>
+      <div><dt>Display</dt><dd>${gallery.records.length}</dd></div>
+      <div><dt>Images</dt><dd>${gallery.records.length}</dd></div>
+      <div><dt>Records</dt><dd>${gallery.entryCount}</dd></div>
+      <div><dt>Sources</dt><dd>${gallery.sourceCount}</dd></div>
     </dl>
   </header>
 `;
 
 const renderAttachmentCard = (
-  record: AttachmentDisplayRecord,
-  sourceFile: string | undefined,
+  { record, sourceFile, sourceName }: AttachmentGalleryRecord,
   index: number,
 ): string => {
   const title = attachmentSectionTitle(record) || basename(record.linkPath) || "Attachment";
@@ -81,7 +66,7 @@ const renderAttachmentCard = (
         <div class="attachment-card-body">
           <span>${escapeHtml(record.mediaKind)}</span>
           <h3>${escapeHtml(title)}</h3>
-          <p>${escapeHtml(outline)}</p>
+          <p>${escapeHtml(`${sourceName} / ${outline}`)}</p>
           <div class="meta-row">
             ${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}
           </div>
@@ -110,8 +95,15 @@ const attachmentOutlinePath = (record: AttachmentDisplayRecord): string[] => {
   return display.outlinePathText ?? record.outlinePath;
 };
 
-const sourceLabel = (sourceFile: string | undefined): string =>
-  sourceFile?.split("/").pop() ?? "the current Org source";
+const gallerySummary = (gallery: AttachmentGalleryView): string => {
+  const scope = gallery.siteWide ? `across ${gallery.label}` : `in ${gallery.label}`;
+  return `${gallery.records.length} image items from ${gallery.entryCount} semantic attachment records ${scope}.`;
+};
+
+const emptyMessage = (gallery: AttachmentGalleryView): string =>
+  gallery.siteWide
+    ? "No image attachments found in configured Org sources."
+    : "No image attachments found in this Org source.";
 
 const escapeHtml = (value: string | number): string =>
   String(value)

@@ -2,7 +2,7 @@ import { blogArticleFromEvent, blogZenModeFromEvent } from "./blogState";
 import type { AgendaPanelKey } from "./agendaTypes";
 import { isAgendaMode, isAgendaPanel } from "./agendaState";
 import type { AppDomNodes } from "./appDom";
-import { bindAttachmentGalleryViewer } from "./attachmentGalleryViewer";
+import { bindTravelGlance } from "./travelGlance";
 import type { AgendaModeKey } from "./config";
 import type { ViewKey } from "./model";
 
@@ -67,8 +67,52 @@ export const bindAppEvents = (
     listenerOptions,
   );
   dom.view.addEventListener("click", (event) => handleBlogZen(event, handlers), listenerOptions);
-  bindAttachmentGalleryViewer(dom, signal);
+  bindLazyAttachmentGalleryViewer(dom, signal);
+  bindTravelGlance(dom, signal);
+  bindLazyTravelVirtualList(dom, signal);
   window.addEventListener("beforeunload", () => handlers.onDispose(), listenerOptions);
+};
+
+const attachmentImageOpenerSelector = 'a[data-attachment-open][data-attachment-kind="image"]';
+
+const bindLazyAttachmentGalleryViewer = (dom: AppDomNodes, signal: AbortSignal): void => {
+  let loading = false;
+  const maybeBind = (): void => {
+    if (loading || signal.aborted || !dom.view.querySelector(attachmentImageOpenerSelector)) {
+      return;
+    }
+    loading = true;
+    void import("./attachmentGalleryViewer").then(({ bindAttachmentGalleryViewer }) => {
+      if (!signal.aborted) {
+        bindAttachmentGalleryViewer(dom, signal);
+      }
+      observer.disconnect();
+    });
+  };
+  const observer = new MutationObserver(maybeBind);
+  observer.observe(dom.view, { childList: true });
+  signal.addEventListener("abort", () => observer.disconnect(), { once: true });
+  maybeBind();
+};
+
+const bindLazyTravelVirtualList = (dom: AppDomNodes, signal: AbortSignal): void => {
+  let loading = false;
+  const maybeBind = (): void => {
+    if (loading || signal.aborted || !dom.view.querySelector("[data-travel-virtual-list]")) {
+      return;
+    }
+    loading = true;
+    void import("./travelVirtualList").then(({ bindTravelVirtualList }) => {
+      if (!signal.aborted) {
+        bindTravelVirtualList(dom, signal);
+      }
+      observer.disconnect();
+    });
+  };
+  const observer = new MutationObserver(maybeBind);
+  observer.observe(dom.view, { childList: true });
+  signal.addEventListener("abort", () => observer.disconnect(), { once: true });
+  maybeBind();
 };
 
 const handleAgendaMode = (event: Event, handlers: AppEventHandlers): void => {

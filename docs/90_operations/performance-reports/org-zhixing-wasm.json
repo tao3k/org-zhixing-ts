@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 1,
+  "kind": "org-zhixing-wasm-performance",
+  "source": "blog/travel.org",
+  "sourceBytes": 8154,
+  "repeat": 1,
+  "iterations": 20,
+  "warmups": 3,
+  "initMs": 35.37,
+  "budgets": {
+    "initMs": 120,
+    "measurements": {
+      "parseNew": {
+        "p95Ms": 80
+      },
+      "parseViewIndexNew": {
+        "p95Ms": 90
+      },
+      "update": {
+        "p95Ms": 50
+      },
+      "updateViewIndex": {
+        "p95Ms": 70
+      },
+      "sectionIndexJson": {
+        "p95Ms": 70
+      },
+      "viewIndexJson": {
+        "p95Ms": 20
+      },
+      "viewIndexJsonParse": {
+        "p95Ms": 25
+      },
+      "sectionIndexJsonParse": {
+        "p95Ms": 60
+      },
+      "lintJson": {
+        "p95Ms": 90
+      },
+      "html": {
+        "p95Ms": 90
+      }
+    }
+  },
+  "measurements": {
+    "parseNew": {
+      "name": "parseNew",
+      "minMs": 0.28,
+      "p50Ms": 0.68,
+      "p95Ms": 4.9,
+      "maxMs": 6.61,
+      "avgMs": 1.11
+    },
+    "parseViewIndexNew": {
+      "name": "parseViewIndexNew",
+      "minMs": 0.81,
+      "p50Ms": 0.9,
+      "p95Ms": 5.35,
+      "maxMs": 9.42,
+      "avgMs": 2.07,
+      "lastSize": 32
+    },
+    "update": {
+      "name": "update",
+      "minMs": 0.18,
+      "p50Ms": 0.54,
+      "p95Ms": 2.95,
+      "maxMs": 5.17,
+      "avgMs": 1.05
+    },
+    "updateViewIndex": {
+      "name": "updateViewIndex",
+      "minMs": 0.61,
+      "p50Ms": 1.42,
+      "p95Ms": 4.55,
+      "maxMs": 8.08,
+      "avgMs": 1.91,
+      "lastSize": 32
+    },
+    "sectionIndexJson": {
+      "name": "sectionIndexJson",
+      "minMs": 0.29,
+      "p50Ms": 0.57,
+      "p95Ms": 0.88,
+      "maxMs": 1.03,
+      "avgMs": 0.59,
+      "lastSize": 84402
+    },
+    "viewIndexJson": {
+      "name": "viewIndexJson",
+      "minMs": 0,
+      "p50Ms": 0,
+      "p95Ms": 0,
+      "maxMs": 0,
+      "avgMs": 0,
+      "lastSize": 32
+    },
+    "viewIndexJsonParse": {
+      "name": "viewIndexJsonParse",
+      "minMs": 0,
+      "p50Ms": 0,
+      "p95Ms": 0,
+      "maxMs": 0,
+      "avgMs": 0,
+      "lastSize": 0
+    },
+    "sectionIndexJsonParse": {
+      "name": "sectionIndexJsonParse",
+      "minMs": 0.27,
+      "p50Ms": 0.28,
+      "p95Ms": 0.53,
+      "maxMs": 0.66,
+      "avgMs": 0.33,
+      "lastSize": 22
+    },
+    "lintJson": {
+      "name": "lintJson",
+      "minMs": 0.09,
+      "p50Ms": 0.09,
+      "p95Ms": 0.19,
+      "maxMs": 0.2,
+      "avgMs": 0.11,
+      "lastSize": 33
+    },
+    "html": {
+      "name": "html",
+      "minMs": 0.08,
+      "p50Ms": 0.09,
+      "p95Ms": 0.25,
+      "maxMs": 0.36,
+      "avgMs": 0.11,
+      "lastSize": 9558
+    }
+  },
+  "budgetResults": {
+    "initMs": {
+      "actual": 35.37,
+      "budget": 120,
+      "pass": true
+    },
+    "measurements": {
+      "parseNew": {
+        "actualP95Ms": 4.9,
+        "budgetP95Ms": 80,
+        "pass": true
+      },
+      "parseViewIndexNew": {
+        "actualP95Ms": 5.35,
+        "budgetP95Ms": 90,
+        "pass": true
+      },
+      "update": {
+        "actualP95Ms": 2.95,
+        "budgetP95Ms": 50,
+        "pass": true
+      },
+      "updateViewIndex": {
+        "actualP95Ms": 4.55,
+        "budgetP95Ms": 70,
+        "pass": true
+      },
+      "sectionIndexJson": {
+        "actualP95Ms": 0.88,
+        "budgetP95Ms": 70,
+        "pass": true
+      },
+      "viewIndexJson": {
+        "actualP95Ms": 0,
+        "budgetP95Ms": 20,
+        "pass": true
+      },
+      "viewIndexJsonParse": {
+        "actualP95Ms": 0,
+        "budgetP95Ms": 25,
+        "pass": true
+      },
+      "sectionIndexJsonParse": {
+        "actualP95Ms": 0.53,
+        "budgetP95Ms": 60,
+        "pass": true
+      },
+      "lintJson": {
+        "actualP95Ms": 0.19,
+        "budgetP95Ms": 90,
+        "pass": true
+      },
+      "html": {
+        "actualP95Ms": 0.25,
+        "budgetP95Ms": 90,
+        "pass": true
+      }
+    }
+  },
+  "recommendations": [
+    {
+      "area": "first-paint-payload",
+      "signal": "sectionIndexJson payload is much larger than viewIndexJson",
+      "action": "Keep first paint on viewIndex/static projections and avoid loading sectionIndex until a view needs it."
+    },
+    {
+      "area": "semantic-cache",
+      "signal": "cold parse+viewIndex is much slower than cached viewIndexJson",
+      "action": "Preserve semantic AST caching and avoid reparsing during navigation."
+    }
+  ]
+}
