@@ -1,4 +1,5 @@
 @import "photoswipe/style.css";
+@import "./styles/theme.css";
 @import "./styles/foundation.css";
 @import "./styles/blog.css";
 @import "./styles/attachments.css";

@@ -30,7 +30,7 @@ describe("Travel Zen Glance interactions", () => {
     expect(layer?.textContent).toContain("丽水站");
     const flow = await waitForElement("[data-travel-glance-flow]");
     await waitForLayout(flow);
-    expect(flow.getAttribute("data-layout")).not.toBe("pending");
+    expect(flow.getAttribute("data-layout")).toBe("ready");
     expect(flow.getAttribute("aria-busy")).toBe("false");
     expect(
       layer?.querySelector('iframe[title="Google Maps preview for 丽水站"]')?.getAttribute("src"),
@@ -73,6 +73,7 @@ describe("Travel Zen Glance interactions", () => {
     expect(flow).toContain("position: relative;");
     expect(styles).toContain('.travel-glance-flow[data-layout="pending"]');
     expect(styles).toContain("opacity: 0;");
+    expect(styles).not.toContain('data-layout="single"');
     expect(styles).toContain('.travel-glance-flow[data-layout="ready"] .travel-glance-flow-item');
     expect(styles).toContain("width: calc(33.333% - 10px);");
     expect(styles).toContain(

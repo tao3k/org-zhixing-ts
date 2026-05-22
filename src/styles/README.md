@@ -3,6 +3,7 @@
 `../styles.css` is the ordered entry manifest. Keep it import-only so the cascade
 stays explicit and reviewable.
 
+- `theme.css`: Radix Colors and Fontsource imports plus the app semantic face tokens.
 - `foundation.css`: app shell, navigation, source picker, and shared page frame.
 - `blog.css` and `blog-rendered.css`: blog reader layout and article overrides.
 - `attachments.css`: attachment gallery and media thumbnails.

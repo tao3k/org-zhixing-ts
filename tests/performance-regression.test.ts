@@ -60,6 +60,7 @@ describe("Org Zhixing performance regression gates", () => {
     expect(travelGlance).not.toMatch(/import\s+Masonry/);
     expect(travelGlance).toContain('import("masonry-layout")');
     expect(travelGlance).toContain('itemSelector: ".travel-glance-flow-item"');
+    expect(travelGlance).not.toContain('flow.dataset.layout = "single"');
   });
 
   it("keeps attachment lightbox code behind an image-opener lazy boundary", () => {

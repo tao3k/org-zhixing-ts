@@ -1,0 +1,138 @@
+@import "@radix-ui/colors/slate.css";
+@import "@radix-ui/colors/slate-alpha.css";
+@import "@radix-ui/colors/blue.css";
+@import "@radix-ui/colors/blue-alpha.css";
+@import "@radix-ui/colors/amber.css";
+@import "@radix-ui/colors/amber-alpha.css";
+@import "@radix-ui/colors/green.css";
+@import "@radix-ui/colors/green-alpha.css";
+@import "@radix-ui/colors/red.css";
+@import "@radix-ui/colors/red-alpha.css";
+@import "@radix-ui/colors/violet.css";
+@import "@radix-ui/colors/violet-alpha.css";
+
+@font-face {
+  font-family: "Inter Variable";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("@fontsource-variable/inter/files/inter-latin-wght-normal.woff2")
+    format("woff2-variations");
+  unicode-range:
+    U+0000-00FF,
+    U+0131,
+    U+0152-0153,
+    U+02BB-02BC,
+    U+02C6,
+    U+02DA,
+    U+02DC,
+    U+0304,
+    U+0308,
+    U+0329,
+    U+2000-206F,
+    U+2074,
+    U+20AC,
+    U+2122,
+    U+2191,
+    U+2193,
+    U+2212,
+    U+2215,
+    U+FEFF,
+    U+FFFD;
+}
+
+@font-face {
+  font-family: "Roboto Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("@fontsource/roboto-mono/files/roboto-mono-latin-400-normal.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF,
+    U+0131,
+    U+0152-0153,
+    U+02BB-02BC,
+    U+02C6,
+    U+02DA,
+    U+02DC,
+    U+0304,
+    U+0308,
+    U+0329,
+    U+2000-206F,
+    U+2074,
+    U+20AC,
+    U+2122,
+    U+2191,
+    U+2193,
+    U+2212,
+    U+2215,
+    U+FEFF,
+    U+FFFD;
+}
+
+@font-face {
+  font-family: "Roboto Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("@fontsource/roboto-mono/files/roboto-mono-latin-500-normal.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF,
+    U+0131,
+    U+0152-0153,
+    U+02BB-02BC,
+    U+02C6,
+    U+02DA,
+    U+02DC,
+    U+0304,
+    U+0308,
+    U+0329,
+    U+2000-206F,
+    U+2074,
+    U+20AC,
+    U+2122,
+    U+2191,
+    U+2193,
+    U+2212,
+    U+2215,
+    U+FEFF,
+    U+FFFD;
+}
+
+:root {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  --font-mono: "Roboto Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --font-cjk: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+
+  --face-normal: var(--slate-12);
+  --face-strong: var(--slate-12);
+  --face-faded: var(--slate-10);
+  --face-muted: var(--slate-9);
+  --face-salient: var(--blue-11);
+  --face-popout: var(--amber-11);
+  --face-success: var(--green-11);
+  --face-critical: var(--red-11);
+  --face-structural: var(--violet-11);
+
+  --surface-canvas: var(--slate-1);
+  --surface-paper: #ffffff;
+  --surface-subtle: var(--slate-2);
+  --surface-quiet: var(--slate-3);
+  --surface-salient: var(--blue-3);
+  --surface-popout: var(--amber-3);
+  --surface-success: var(--green-3);
+  --surface-critical: var(--red-3);
+  --surface-structural: var(--violet-3);
+
+  --hairline: var(--slate-6);
+  --hairline-soft: var(--slate-5);
+  --hairline-strong: var(--slate-7);
+  --shadow-reading: 0 18px 44px var(--slate-a3);
+  --shadow-hover: 0 14px 34px var(--slate-a4);
+
+  --radius-tight: 6px;
+  --radius-ui: 8px;
+  --reader-width: 820px;
+  --reader-wide-width: 1120px;
+}

@@ -9,11 +9,11 @@
 
 .blog-article p,
 .blog-article li {
-  color: #263545;
+  color: var(--face-normal);
   font-size: 1.02rem;
   line-height: 1.88;
 }
 
 .blog-reader.is-zen .blog-article h1 {
-  font-size: clamp(2rem, 4vw, 3.4rem);
+  font-size: 3rem;
 }

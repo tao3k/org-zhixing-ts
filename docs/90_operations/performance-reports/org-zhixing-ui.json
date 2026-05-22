@@ -26,12 +26,12 @@
     "sourceShardCount": 8,
     "largestSourceShardBytes": 407338,
     "largestSourceShard": "org-zhixing.sources/wallpaper-gallery.json",
-    "initialScriptBytes": 794801,
+    "initialScriptBytes": 795028,
     "initialScriptCount": 3,
     "initialScripts": [
-      "assets/runtime.a682dbda.js",
-      "assets/vendors-node_modules_smol-toml_dist_index_js.69fd2a69.js",
-      "assets/app.38278d25.js"
+      "assets/runtime.2acf34eb.js",
+      "assets/vendors-node_modules_fontsource-variable_inter_files_inter-latin-wght-normal_woff2-node_modul-38c2c2.984ee745.js",
+      "assets/app.94a8d4f7.js"
     ],
     "travelPlaces": 22,
     "travelSourceCount": 1,
@@ -47,11 +47,11 @@
     "dynamicMasonryChunk": true,
     "staticManifestParse": {
       "name": "staticManifestParse",
-      "minMs": 0.09,
+      "minMs": 0.1,
       "p50Ms": 0.1,
-      "p95Ms": 0.14,
-      "maxMs": 0.2,
-      "avgMs": 0.1
+      "p95Ms": 0.27,
+      "maxMs": 0.68,
+      "avgMs": 0.13
     },
     "travelProjectionRead": {
       "name": "travelProjectionRead",
@@ -79,7 +79,7 @@
       "pass": true
     },
     "initialScriptBytes": {
-      "actual": 794801,
+      "actual": 795028,
       "budget": 1500000,
       "pass": true
     },
@@ -94,7 +94,7 @@
       "pass": true
     },
     "staticManifestParseP95Ms": {
-      "actual": 0.14,
+      "actual": 0.27,
       "budget": 80,
       "pass": true
     },

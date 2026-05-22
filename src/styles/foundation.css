@@ -1,10 +1,8 @@
 
 :root {
-  color: #172026;
-  background: #f6f7f9;
-  font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  color: var(--face-normal);
+  background: var(--surface-canvas);
+  font-family: var(--font-sans), var(--font-cjk);
   line-height: 1.5;
 }
 
@@ -15,6 +13,7 @@
 body {
   margin: 0;
   overflow-x: hidden;
+  background: var(--surface-canvas);
 }
 
 button {
@@ -43,15 +42,15 @@ button {
   gap: 22px;
   align-items: center;
   padding: 14px clamp(18px, 4vw, 54px);
-  border-bottom: 1px solid #dfe5ee;
-  background: rgb(250 252 255 / 94%);
+  border-bottom: 1px solid var(--hairline-soft);
+  background: color-mix(in srgb, var(--surface-paper) 92%, transparent);
   backdrop-filter: blur(14px);
 }
 
 .site-brand {
   display: grid;
   gap: 1px;
-  color: #101820;
+  color: var(--face-strong);
   text-decoration: none;
 }
 
@@ -62,7 +61,7 @@ button {
 }
 
 .site-brand small {
-  color: #66758a;
+  color: var(--face-faded);
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -82,7 +81,7 @@ button {
 .site-hero p:not(.eyebrow) {
   max-width: 620px;
   margin: 10px 0 0;
-  color: #4f6074;
+  color: var(--face-faded);
   font-size: 1.02rem;
   line-height: 1.72;
 }
@@ -94,12 +93,12 @@ button {
 .knowledge-map {
   position: relative;
   min-height: 300px;
-  border: 1px solid #dbe4ef;
+  border: 1px solid var(--hairline-soft);
   border-radius: 8px;
   background:
-    linear-gradient(#eef3f8 1px, transparent 1px),
-    linear-gradient(90deg, #eef3f8 1px, transparent 1px),
-    #ffffff;
+    linear-gradient(var(--surface-quiet) 1px, transparent 1px),
+    linear-gradient(90deg, var(--surface-quiet) 1px, transparent 1px),
+    var(--surface-paper);
   background-size: 34px 34px;
   overflow: hidden;
 }
@@ -108,7 +107,7 @@ button {
   position: absolute;
   height: 2px;
   transform-origin: left center;
-  background: #9eb0c5;
+  background: var(--hairline-strong);
 }
 
 .map-line--one {
@@ -138,12 +137,12 @@ button {
   min-width: 58px;
   min-height: 42px;
   place-items: center;
-  border: 1px solid #ced9e7;
+  border: 1px solid var(--hairline-strong);
   border-radius: 8px;
   padding: 8px 10px;
-  color: #172026;
-  background: #ffffff;
-  box-shadow: 0 12px 30px rgb(22 33 49 / 8%);
+  color: var(--face-strong);
+  background: var(--surface-paper);
+  box-shadow: var(--shadow-hover);
   font-size: 0.78rem;
   font-weight: 900;
 }
@@ -153,41 +152,41 @@ button {
   top: 118px;
   min-width: 64px;
   min-height: 64px;
-  color: #ffffff;
-  background: #172026;
+  color: var(--surface-paper);
+  background: var(--face-strong);
   font-size: 1.2rem;
 }
 
 .map-node--agenda {
   right: 42px;
   top: 54px;
-  border-color: #c4761b;
-  color: #7b4b12;
-  background: #fffaf2;
+  border-color: var(--amber-7);
+  color: var(--face-popout);
+  background: var(--surface-popout);
 }
 
 .map-node--blog {
   right: 54px;
   bottom: 70px;
-  border-color: #2b6f9f;
-  color: #174f75;
-  background: #f5fbff;
+  border-color: var(--blue-7);
+  color: var(--face-salient);
+  background: var(--surface-salient);
 }
 
 .map-node--event {
   left: 34px;
   bottom: 36px;
-  border-color: #7563a8;
-  color: #433468;
-  background: #faf8ff;
+  border-color: var(--violet-7);
+  color: var(--face-structural);
+  background: var(--surface-structural);
 }
 
 .map-node--note {
   left: 190px;
   top: 30px;
-  border-color: #3f7f56;
-  color: #255637;
-  background: #f6fbf7;
+  border-color: var(--green-7);
+  color: var(--face-success);
+  background: var(--surface-success);
 }
 
 header:not(.site-header) {
@@ -199,7 +198,7 @@ header:not(.site-header) {
 
 .eyebrow {
   margin: 0 0 4px;
-  color: #596779;
+  color: var(--face-faded);
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0;
@@ -209,8 +208,8 @@ header:not(.site-header) {
 h1 {
   max-width: 680px;
   margin: 0;
-  color: #101820;
-  font-size: clamp(2.1rem, 5vw, 4.6rem);
+  color: var(--face-strong);
+  font-size: 4rem;
   line-height: 1.04;
 }
 
@@ -279,14 +278,14 @@ h1 {
 }
 
 .source-feed-heading {
-  color: #596779;
+  color: var(--face-faded);
   font-size: 0.72rem;
   font-weight: 850;
   text-transform: uppercase;
 }
 
 .source-feed-heading small {
-  color: #7a8797;
+  color: var(--face-muted);
   font-size: 0.72rem;
   text-transform: none;
 }
@@ -302,11 +301,11 @@ h1 {
   gap: 5px;
   width: 100%;
   min-width: 0;
-  border: 1px solid #d4dde9;
+  border: 1px solid var(--hairline);
   border-radius: 8px;
   padding: 16px;
-  color: #263545;
-  background: #ffffff;
+  color: var(--face-normal);
+  background: var(--surface-paper);
   cursor: pointer;
   text-align: left;
   transition:
@@ -316,34 +315,34 @@ h1 {
 }
 
 .source-block:hover {
-  border-color: #9eb0c5;
+  border-color: var(--hairline-strong);
   transform: translateY(-1px);
-  box-shadow: 0 14px 32px rgb(22 33 49 / 9%);
+  box-shadow: var(--shadow-hover);
 }
 
 .source-block.active {
-  border-color: #2864d8;
-  background: #f5fbff;
-  box-shadow: 0 10px 24px rgb(40 100 216 / 10%);
+  border-color: var(--blue-7);
+  background: var(--surface-salient);
+  box-shadow: 0 10px 24px var(--blue-a3);
 }
 
 .source-block span,
 .workspace-bar span {
-  color: #596779;
+  color: var(--face-faded);
   font-size: 0.68rem;
   font-weight: 850;
   text-transform: uppercase;
 }
 
 .source-block strong {
-  color: #101820;
+  color: var(--face-strong);
   font-size: 0.96rem;
   line-height: 1.2;
 }
 
 .source-block small,
 .workspace-bar small {
-  color: #607086;
+  color: var(--face-faded);
   font-size: 0.76rem;
   line-height: 1.35;
   overflow-wrap: anywhere;
@@ -353,8 +352,8 @@ h1 {
   width: fit-content;
   border-radius: 999px;
   padding: 3px 8px;
-  color: #31527a;
-  background: #e7f0fb;
+  color: var(--face-salient);
+  background: var(--surface-salient);
   font-size: 0.7rem;
   font-style: normal;
   font-weight: 800;
@@ -374,7 +373,7 @@ h1 {
   display: none;
   padding: 16px 18px 0;
   min-width: 0;
-  background: #ffffff;
+  background: var(--surface-paper);
 }
 
 .workspace-bar div {
@@ -384,7 +383,7 @@ h1 {
 }
 
 .workspace-bar strong {
-  color: #101820;
+  color: var(--face-strong);
   font-size: 1rem;
   line-height: 1.2;
 }
@@ -401,7 +400,7 @@ nav button {
   border: 0;
   border-radius: 8px;
   padding: 9px 12px;
-  color: #2f3a47;
+  color: var(--face-normal);
   background: transparent;
   cursor: pointer;
   font-size: 0.88rem;
@@ -409,8 +408,8 @@ nav button {
 }
 
 nav button.active {
-  color: #ffffff;
-  background: #172026;
+  color: var(--surface-paper);
+  background: var(--face-strong);
 }
 
 #view {

@@ -1,9 +1,9 @@
 .card {
   padding: 16px;
-  border: 1px solid #d9dee7;
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 10px 28px rgb(22 33 49 / 5%);
+  border: 1px solid var(--hairline-soft);
+  border-radius: var(--radius-ui);
+  background: var(--surface-paper);
+  box-shadow: none;
 }
 
 .card h2 {
@@ -13,7 +13,7 @@
 
 .card p {
   margin: 0;
-  color: #3c4858;
+  color: var(--face-normal);
   white-space: pre-line;
 }
 
@@ -31,7 +31,7 @@
   align-items: end;
   justify-content: space-between;
   gap: 16px;
-  border-bottom: 1px solid #dfe7f0;
+  border-bottom: 1px solid var(--hairline-soft);
   padding-bottom: 12px;
 }
 
@@ -41,7 +41,7 @@
 
 .org-record-header p:last-child {
   margin: 0;
-  color: #657386;
+  color: var(--face-faded);
   font-size: 0.9rem;
 }
 
@@ -52,11 +52,11 @@
 }
 
 .org-note-policy span {
-  border: 1px solid #dbe5ef;
+  border: 1px solid var(--hairline-soft);
   border-radius: 999px;
   padding: 4px 9px;
-  color: #30425a;
-  background: #f7fafc;
+  color: var(--face-faded);
+  background: var(--surface-subtle);
   font-size: 0.78rem;
   font-weight: 760;
 }
@@ -70,19 +70,19 @@
   display: flex;
   align-items: end;
   justify-content: flex-start;
-  border-bottom: 1px solid #e0e7ef;
+  border-bottom: 1px solid var(--hairline-soft);
   padding-bottom: 8px;
 }
 
 .org-record-source-group h3 {
   margin: 0;
-  color: #172026;
+  color: var(--face-strong);
   font-size: 1rem;
 }
 
 .org-record-source-group p {
   margin: 3px 0 0;
-  color: #657386;
+  color: var(--face-faded);
   font-size: 0.82rem;
 }
 
@@ -99,17 +99,17 @@
 
 .org-record-render--memory {
   padding: 12px;
-  border: 1px solid #e0e7ef;
-  border-radius: 8px;
-  background: #ffffff;
+  border: 1px solid var(--hairline-soft);
+  border-radius: var(--radius-ui);
+  background: var(--surface-paper);
 }
 
 .org-record-render--missing {
   padding: 12px;
-  border: 1px dashed #d3dde8;
-  border-radius: 8px;
-  background: #f7fafc;
-  color: #617083;
+  border: 1px dashed var(--hairline);
+  border-radius: var(--radius-ui);
+  background: var(--surface-subtle);
+  color: var(--face-faded);
   font-size: 0.9rem;
 }
 
@@ -118,7 +118,7 @@
 }
 
 .card-kicker {
-  color: #6f7d8f;
+  color: var(--face-faded);
   font-size: 0.76rem;
 }
 
@@ -133,8 +133,8 @@
 .agenda-kind {
   border-radius: 999px;
   padding: 3px 8px;
-  color: #31527a;
-  background: #e7f0fb;
+  color: var(--face-salient);
+  background: var(--surface-salient);
   font-size: 0.78rem;
 }
 
@@ -151,13 +151,13 @@
 }
 
 .properties dt {
-  color: #6f7d8f;
+  color: var(--face-faded);
   font-size: 0.78rem;
 }
 
 .properties dd {
   margin: 0;
-  color: #2f3a47;
+  color: var(--face-normal);
   font-size: 0.84rem;
 }
 

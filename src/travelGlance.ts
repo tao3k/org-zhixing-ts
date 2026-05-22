@@ -147,7 +147,12 @@ const openTravelGlance = async (card: HTMLElement): Promise<void> => {
   root.style.visibility = "hidden";
   document.body.append(root);
   loadMapFrames(root);
-  await initializeTravelMasonry(root, cleanups);
+  try {
+    await initializeTravelMasonry(root, cleanups);
+  } catch (error) {
+    destroy();
+    throw error;
+  }
   if (request !== openRequest || !card.isConnected) {
     destroy();
     return;
@@ -230,29 +235,21 @@ const initializeTravelMasonry = async (
     masonry?.reloadItems?.();
     masonry?.layout?.();
   };
-  try {
-    const Masonry = await loadMasonryRuntime();
-    if (cleaned || !flow.isConnected) {
-      return;
-    }
-    masonry = new Masonry(flow, {
-      columnWidth: ".travel-glance-sizer",
-      gutter: 14,
-      horizontalOrder: true,
-      itemSelector: ".travel-glance-flow-item",
-      percentPosition: true,
-      transitionDuration: 0,
-    });
-    flow.dataset.layout = "ready";
-    flow.setAttribute("aria-busy", "false");
-    layout();
-  } catch {
-    if (cleaned || !flow.isConnected) {
-      return;
-    }
-    flow.dataset.layout = "single";
-    flow.setAttribute("aria-busy", "false");
+  const Masonry = await loadMasonryRuntime();
+  if (cleaned || !flow.isConnected) {
+    return;
   }
+  masonry = new Masonry(flow, {
+    columnWidth: ".travel-glance-sizer",
+    gutter: 14,
+    horizontalOrder: true,
+    itemSelector: ".travel-glance-flow-item",
+    percentPosition: true,
+    transitionDuration: 0,
+  });
+  flow.dataset.layout = "ready";
+  flow.setAttribute("aria-busy", "false");
+  layout();
 
   const mediaCleanups = [...flow.querySelectorAll("iframe,img,video")].map((element) => {
     element.addEventListener("load", layout);
@@ -264,6 +261,9 @@ const initializeTravelMasonry = async (
   });
 
   cleanups.push(() => {
+    if (cleaned) {
+      return;
+    }
     cleaned = true;
     mediaCleanups.forEach((cleanup) => cleanup());
     masonry?.destroy?.();
