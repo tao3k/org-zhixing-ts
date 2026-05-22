@@ -45,6 +45,7 @@ The design system is intentionally package-backed:
 | =@zag-js/floating-panel= | window state, drag, resize, maximize, and restore for Zen Glance |
 | =masonry-layout= | waterfall layout for mixed media inside Zen Glance |
 | =@tanstack/virtual-core= | large Travel list windowing |
+| =@mozilla/readability= | future external web-page reader extraction, not the current Org-rendered Zen path |
 
 The point is not to minimize dependencies.  The point is to let mature TS
 libraries own the parts that are stateful, measured, or easy to get subtly
@@ -93,6 +94,17 @@ site navigation, source controls, and reader-local chrome; it is a pure reading
 surface.  =Esc= returns to the index, and arrow keys move to adjacent articles.
 Records follow the same direction: source-backed notes are a hairline-separated
 index, not a card wall.
+
+SimpRead is a useful product reference because it separates focus mode,
+reader-mode extraction, Chinese reading rhythm, media preservation, annotation,
+and later-read workflows.  Org Zhixing should translate those ideas into Org
+terms instead of copying the browser-extension architecture.  The parser already
+owns article structure, so Zen does not need =Readability= for current Org
+articles.  It should borrow the reading surface: quiet chrome, centered first
+heading, centered article metadata, generous prose rhythm, and preserved media.
+If a future capture flow imports arbitrary web pages, =@mozilla/readability=
+belongs at that external-ingest boundary together with sanitizer policy, not in
+the hot Zen render path.
 
 Large collections must not become large visual grids.  A workspace with 1000 or
 2000 Org files still gets a compact source picker, but source files are quiet

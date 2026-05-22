@@ -17,3 +17,33 @@
 .blog-reader.is-zen .blog-article h1 {
   font-size: 3rem;
 }
+
+.blog-reader.is-zen .blog-article > h1:first-child {
+  max-width: 18ch;
+  margin: 0 auto 18px;
+  text-align: center;
+}
+
+.blog-reader.is-zen .blog-article > h1:first-child.org-heading {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+
+.blog-reader.is-zen .blog-article > h1:first-child .org-heading-title,
+.blog-reader.is-zen .blog-article > h1:first-child .org-heading-markers {
+  justify-content: center;
+  text-align: center;
+}
+
+.blog-reader.is-zen .blog-article > h1:first-child + .org-section-meta {
+  justify-items: center;
+  max-width: 54ch;
+  margin: 0 auto 38px;
+  padding: 0;
+  border-left: 0;
+}
+
+.blog-reader.is-zen .blog-article > h1:first-child + .org-section-meta .org-meta-row {
+  justify-content: center;
+}
