@@ -52,6 +52,10 @@ export const bindTravelGlance = (dom: AppDomNodes, signal: AbortSignal): void =>
   signal.addEventListener("abort", () => activeGlance?.destroy(), { once: true });
 };
 
+export const prefetchTravelGlanceRuntime = (): void => {
+  void Promise.all([loadFloatingPanelRuntime(), loadMasonryRuntime()]);
+};
+
 const handleTravelClick = (event: Event): void => {
   const target = event.target instanceof Element ? event.target : null;
   if (!target) {

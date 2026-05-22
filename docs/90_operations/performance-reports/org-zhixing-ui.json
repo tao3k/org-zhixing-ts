@@ -23,7 +23,9 @@
     "eagerFloatingPanel": false,
     "eagerZagSelect": false,
     "lazyParserWorker": true,
-    "staticSiteWideSourceDeferral": true
+    "staticSiteWideSourceDeferral": true,
+    "deferredSourcePickerRuntime": true,
+    "idleInteractionChunkPrefetch": true
   },
   "metrics": {
     "staticManifestBytes": 64445,
@@ -86,12 +88,12 @@
       "file": 136,
       "orgTitle": 34
     },
-    "initialScriptBytes": 930559,
+    "initialScriptBytes": 940290,
     "initialScriptCount": 3,
     "initialScripts": [
       "assets/runtime.545635b2.js",
       "assets/vendors-node_modules_fontsource-variable_inter_files_inter-latin-wght-normal_woff2-node_modul-38c2c2.984ee745.js",
-      "assets/app.1d79095e.js"
+      "assets/app.cfad6edd.js"
     ],
     "parserWorkerScriptBytes": 119867,
     "wasmAssetBytes": 2158753,
@@ -153,20 +155,22 @@
     "dynamicZagSelectChunk": true,
     "lazyParserWorker": true,
     "staticSiteWideSourceDeferral": true,
+    "deferredSourcePickerRuntime": true,
+    "idleInteractionChunkPrefetch": true,
     "staticManifestParse": {
       "name": "staticManifestParse",
       "minMs": 0.13,
       "p50Ms": 0.13,
-      "p95Ms": 0.22,
-      "maxMs": 0.42,
-      "avgMs": 0.15
+      "p95Ms": 0.18,
+      "maxMs": 0.34,
+      "avgMs": 0.14
     },
     "travelProjectionRead": {
       "name": "travelProjectionRead",
       "minMs": 0,
       "p50Ms": 0,
       "p95Ms": 0,
-      "maxMs": 0.01,
+      "maxMs": 0,
       "avgMs": 0
     }
   },
@@ -187,7 +191,7 @@
       "pass": true
     },
     "initialScriptBytes": {
-      "actual": 930559,
+      "actual": 940290,
       "budget": 1500000,
       "pass": true
     },
@@ -202,7 +206,7 @@
       "pass": true
     },
     "staticManifestParseP95Ms": {
-      "actual": 0.22,
+      "actual": 0.18,
       "budget": 80,
       "pass": true
     },
@@ -265,6 +269,16 @@
       "actual": true,
       "budget": true,
       "pass": true
+    },
+    "deferredSourcePickerRuntime": {
+      "actual": true,
+      "budget": true,
+      "pass": true
+    },
+    "idleInteractionChunkPrefetch": {
+      "actual": true,
+      "budget": true,
+      "pass": true
     }
   },
   "recommendations": [
@@ -287,6 +301,16 @@
       "area": "site-wide-static-startup",
       "signal": "static site-wide views can render from the entry manifest",
       "action": "Keep Blog index, Gallery, and Travel from loading the active source shard during boot; source shards should start at Zen/article or source-scoped views."
+    },
+    {
+      "area": "source-picker-first-interaction",
+      "signal": "Zag Select is warmed on intent/idle instead of imported during source picker construction",
+      "action": "Keep the styled source picker runtime off the boot path while prefetching it before the first deliberate picker open."
+    },
+    {
+      "area": "interaction-prefetch",
+      "signal": "Gallery lightbox and Travel Glance chunks are prefetched after the relevant DOM appears",
+      "action": "Continue moving heavy first-interaction chunks to intent/idle prefetch boundaries instead of eager imports."
     },
     {
       "area": "first-interaction-chunks",

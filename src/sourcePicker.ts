@@ -77,14 +77,18 @@ class SourcePickerBinding {
   #destroyed = false;
   #machine: SourcePickerMachine | null = null;
   #runtime: SourcePickerRuntime | null = null;
+  #runtimeLoad: Promise<void> | null = null;
+  #warmupController = new AbortController();
+  #idleWarmupId: number | null = null;
 
   constructor(root: HTMLElement, sources: SourceItem[], selected: string) {
     this.#root = root;
     this.#items = sources;
     this.#selected = selected;
     this.#nodes = createSourcePickerNodes(root);
+    this.#bindWarmupIntent();
     this.#syncLoading();
-    void this.#loadRuntime();
+    this.#scheduleIdleWarmup();
   }
 
   update(sources: SourceItem[], selected: string): void {
@@ -110,10 +114,26 @@ class SourcePickerBinding {
     this.#clearProps();
     this.#unsubscribe();
     this.#machine?.stop();
+    this.#warmupController.abort();
+    if (this.#idleWarmupId !== null) {
+      window.clearTimeout(this.#idleWarmupId);
+    }
     this.#root.replaceChildren();
   }
 
-  async #loadRuntime(): Promise<void> {
+  #loadRuntime(): Promise<void> {
+    if (this.#runtime) {
+      return Promise.resolve();
+    }
+    if (this.#runtimeLoad) {
+      return this.#runtimeLoad;
+    }
+    this.#nodes.indicator.textContent = "Loading";
+    this.#runtimeLoad = this.#installRuntime();
+    return this.#runtimeLoad;
+  }
+
+  async #installRuntime(): Promise<void> {
     const runtime = await loadSourcePickerRuntime();
     if (this.#destroyed) {
       return;
@@ -128,6 +148,41 @@ class SourcePickerBinding {
     machine.start();
     this.#unsubscribe = machine.subscribe(() => this.#sync());
     this.#sync();
+  }
+
+  #bindWarmupIntent(): void {
+    const warmup = (): void => {
+      void this.#loadRuntime();
+    };
+    this.#nodes.trigger.addEventListener("pointerenter", warmup, {
+      signal: this.#warmupController.signal,
+    });
+    this.#nodes.trigger.addEventListener("focus", warmup, {
+      signal: this.#warmupController.signal,
+    });
+    this.#nodes.trigger.addEventListener(
+      "click",
+      (event) => {
+        if (this.#runtime) {
+          return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        void this.#loadRuntime().then(() => {
+          if (!this.#destroyed) {
+            this.#nodes.trigger.click();
+          }
+        });
+      },
+      { signal: this.#warmupController.signal },
+    );
+  }
+
+  #scheduleIdleWarmup(): void {
+    this.#idleWarmupId = window.setTimeout(() => {
+      this.#idleWarmupId = null;
+      void this.#loadRuntime();
+    }, 600);
   }
 
   #buildProps(runtime: SourcePickerRuntime): Partial<SelectProps<SourcePickerItem>> {
@@ -192,9 +247,9 @@ class SourcePickerBinding {
   #syncLoading(): void {
     this.#clearProps();
     this.#nodes.value.textContent = selectedSourceName(this.#items, this.#selected);
-    this.#nodes.indicator.textContent = "Load";
+    this.#nodes.indicator.textContent = this.#runtimeLoad ? "Loading" : "Load";
     this.#nodes.root.dataset.state = "loading";
-    this.#nodes.trigger.disabled = true;
+    this.#nodes.trigger.disabled = false;
     this.#nodes.positioner.hidden = true;
     this.#nodes.list.replaceChildren();
   }

@@ -6,7 +6,9 @@ This directory contains Git-tracked performance receipts for Org Zhixing.
 - =org-zhixing-ui.json= is produced by =npm run perf:ui= after a production
   build.  It covers the compact entry manifest, per-source shard inventory,
   source-shard field breakdowns, eager script inventory, lazy dependency leaks,
-  parser worker deferral, and static site-wide source-shard deferral.
+  parser worker deferral, static site-wide source-shard deferral, deferred
+  source-picker runtime loading, and idle/intent prefetch for interaction
+  chunks.
 
 The reports intentionally live in docs instead of =.cache=.  They are reviewable
 artifacts: budgets, current measurements, and recommendations should move

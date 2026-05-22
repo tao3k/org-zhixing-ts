@@ -51,6 +51,10 @@ only for orchestration and rendering.
 - Static site-wide startup now defers both active source-shard loading and the
   Org parser worker.  Blog index, Gallery, and Travel can render from the entry
   manifest before the 117 KiB worker chunk or 2.1 MiB WASM asset are needed.
+- First-interaction runtimes now use intent/idle warmup.  The styled source
+  picker no longer imports the 634 KiB Zag Select chunk during construction;
+  Gallery lightbox and Travel Glance chunks are prefetched after the relevant
+  DOM appears, without entering initial scripts.
 - Theme tokens are generated before build with =style-dictionary= and Capsize
   metrics, but those packages remain dev-only and do not enter the runtime
   bundle.
@@ -83,8 +87,10 @@ The benchmark reports are Git-tracked under
   script size, static manifest JSON parse timing, Travel projection read
   timing, source-shard field-size breakdowns, largest async chunks, parser
   worker/WASM asset size, static site-wide source deferral, and whether
-  PhotoSwipe, =css-line-break=, TanStack Virtual, or the Travel virtual-list
-  chunk, Zag Floating Panel, or Zag Select leaked into initial scripts.
+  source picker runtime loading is deferred, interaction chunks are idle
+  prefetched, and whether PhotoSwipe, =css-line-break=, TanStack Virtual, or the
+  Travel virtual-list chunk, Zag Floating Panel, or Zag Select leaked into
+  initial scripts.
 
 The unit suite also carries regression gates:
 
@@ -101,6 +107,8 @@ The unit suite also carries regression gates:
   manifest while Records loads source shards on demand;
 - parser worker creation and active source-shard loading must stay out of static
   Blog/Gallery/Travel startup.
+- source picker construction must not import Zag Select immediately; heavy
+  first-interaction chunks should be warmed on user intent or idle.
 
 On the local 100x demo fixture, parse p95 is still single-digit milliseconds;
 the visible first-call bottleneck is semantic conversion, not the rowan parser.
@@ -126,6 +134,9 @@ about 505 KiB and =sectionIndex= about 447 KiB, together about 952 KiB of the
 =memory=, =sectionIndex=, and =attachmentInventory=.  The largest async
 interaction chunks are =@zag-js/select= at about 634 KiB, PhotoSwipe at about
 497 KiB, Zag Floating Panel at about 213 KiB, and Masonry at about 160 KiB.
+The report now gates =deferredSourcePickerRuntime= and
+=idleInteractionChunkPrefetch= so these large chunks remain outside the boot
+path while still being warmed before likely first use.
 
 ** Next Performance Milestones
 

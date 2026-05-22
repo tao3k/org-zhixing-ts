@@ -10,7 +10,7 @@ import {
 import type { AgendaPanelKey } from "./agendaTypes";
 import { isAgendaMode, isAgendaPanel } from "./agendaState";
 import type { AppDomNodes } from "./appDom";
-import { bindTravelGlance } from "./travelGlance";
+import { bindTravelGlance, prefetchTravelGlanceRuntime } from "./travelGlance";
 import { sourcePickerChangeEvent, type SourcePickerChangeDetail } from "./sourcePicker";
 import type { AgendaModeKey } from "./config";
 import type { ViewKey } from "./model";
@@ -91,6 +91,7 @@ export const bindAppEvents = (
   );
   bindLazyAttachmentGalleryViewer(dom, signal);
   bindTravelGlance(dom, signal);
+  bindTravelGlancePrefetch(dom, signal);
   bindLazyTravelVirtualList(dom, signal);
   bindLazyBlogVirtualList(dom, signal);
   bindLazyBlogZenProgress(dom, signal);
@@ -100,23 +101,83 @@ export const bindAppEvents = (
 const attachmentImageOpenerSelector = 'a[data-attachment-open][data-attachment-kind="image"]';
 
 const bindLazyAttachmentGalleryViewer = (dom: AppDomNodes, signal: AbortSignal): void => {
-  let loading = false;
-  const maybeBind = (): void => {
-    if (loading || signal.aborted || !dom.view.querySelector(attachmentImageOpenerSelector)) {
-      return;
-    }
-    loading = true;
-    void import("./attachmentGalleryViewer").then(({ bindAttachmentGalleryViewer }) => {
-      if (!signal.aborted) {
+  let bound = false;
+  let scheduled = false;
+  let loading: Promise<void> | null = null;
+  const load = (): Promise<void> => {
+    loading ??= import("./attachmentGalleryViewer").then(({ bindAttachmentGalleryViewer }) => {
+      if (!signal.aborted && !bound) {
+        bound = true;
         bindAttachmentGalleryViewer(dom, signal);
       }
       observer.disconnect();
     });
+    return loading;
   };
+  const maybeBind = (): void => {
+    if (
+      bound ||
+      loading ||
+      scheduled ||
+      signal.aborted ||
+      !dom.view.querySelector(attachmentImageOpenerSelector)
+    ) {
+      return;
+    }
+    scheduled = true;
+    scheduleIdleImport(load, signal);
+  };
+  dom.view.addEventListener(
+    "pointerover",
+    (event) => {
+      if ((event.target as HTMLElement).closest(attachmentImageOpenerSelector)) {
+        void load();
+      }
+    },
+    { capture: true, signal },
+  );
+  dom.view.addEventListener(
+    "click",
+    (event) => {
+      const opener = (event.target as HTMLElement).closest<HTMLAnchorElement>(
+        attachmentImageOpenerSelector,
+      );
+      if (!opener || bound) {
+        return;
+      }
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      void load().then(() => {
+        if (!signal.aborted && opener.isConnected) {
+          opener.click();
+        }
+      });
+    },
+    { capture: true, signal },
+  );
   const observer = new MutationObserver(maybeBind);
   observer.observe(dom.view, { childList: true });
   signal.addEventListener("abort", () => observer.disconnect(), { once: true });
   maybeBind();
+};
+
+const bindTravelGlancePrefetch = (dom: AppDomNodes, signal: AbortSignal): void => {
+  let scheduled = false;
+  const maybePrefetch = (): void => {
+    if (scheduled || signal.aborted || !dom.view.querySelector("[data-travel-card]")) {
+      return;
+    }
+    scheduled = true;
+    scheduleIdleImport(() => {
+      prefetchTravelGlanceRuntime();
+      return Promise.resolve();
+    }, signal);
+    observer.disconnect();
+  };
+  const observer = new MutationObserver(maybePrefetch);
+  observer.observe(dom.view, { childList: true });
+  signal.addEventListener("abort", () => observer.disconnect(), { once: true });
+  maybePrefetch();
 };
 
 const bindLazyTravelVirtualList = (dom: AppDomNodes, signal: AbortSignal): void => {
@@ -177,6 +238,15 @@ const bindLazyBlogZenProgress = (dom: AppDomNodes, signal: AbortSignal): void =>
   observer.observe(dom.view, { childList: true });
   signal.addEventListener("abort", () => observer.disconnect(), { once: true });
   maybeBind();
+};
+
+const scheduleIdleImport = (load: () => Promise<void>, signal: AbortSignal): void => {
+  const timeout = window.setTimeout(() => {
+    if (!signal.aborted) {
+      void load();
+    }
+  }, 450);
+  signal.addEventListener("abort", () => window.clearTimeout(timeout), { once: true });
 };
 
 const handleAgendaMode = (event: Event, handlers: AppEventHandlers): void => {

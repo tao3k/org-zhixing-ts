@@ -39,6 +39,8 @@ const budgets = {
   eagerZagSelect: false,
   lazyParserWorker: true,
   staticSiteWideSourceDeferral: true,
+  deferredSourcePickerRuntime: true,
+  idleInteractionChunkPrefetch: true,
 };
 
 const indexHtml = await readFile(resolve(distRoot, "index.html"), "utf8");
@@ -109,6 +111,8 @@ const metrics = {
   dynamicZagSelectChunk: [...assets.keys()].some((script) => /zag-js_select/.test(script)),
   lazyParserWorker: runtimeBoundary.lazyParserWorker,
   staticSiteWideSourceDeferral: runtimeBoundary.staticSiteWideSourceDeferral,
+  deferredSourcePickerRuntime: runtimeBoundary.deferredSourcePickerRuntime,
+  idleInteractionChunkPrefetch: runtimeBoundary.idleInteractionChunkPrefetch,
   staticManifestParse,
   travelProjectionRead,
 };
@@ -217,10 +221,16 @@ function aggregateShardFieldBytes(shards) {
 }
 
 async function runtimeBoundarySignals() {
-  const [appSource, clientSource] = await Promise.all([
+  const [appSource, appEventsSource, clientSource, sourcePickerSource] = await Promise.all([
     readFile(resolve(projectRoot, "src/app.ts"), "utf8"),
+    readFile(resolve(projectRoot, "src/appEvents.ts"), "utf8"),
     readFile(resolve(projectRoot, "src/orgizeClient.ts"), "utf8"),
+    readFile(resolve(projectRoot, "src/sourcePicker.ts"), "utf8"),
   ]);
+  const sourcePickerConstructor =
+    sourcePickerSource.match(
+      /constructor\(root: HTMLElement, sources: SourceItem\[\], selected: string\) \{([\s\S]*?)\n  \}/,
+    )?.[1] ?? "";
   return {
     lazyParserWorker:
       clientSource.includes("#workerForRequest()") &&
@@ -228,6 +238,12 @@ async function runtimeBoundarySignals() {
     staticSiteWideSourceDeferral:
       appSource.includes("#viewNeedsActiveSource()") &&
       appSource.includes("#canRenderStaticSiteWideView()"),
+    deferredSourcePickerRuntime:
+      sourcePickerSource.includes("#scheduleIdleWarmup()") &&
+      !sourcePickerConstructor.includes("#loadRuntime"),
+    idleInteractionChunkPrefetch:
+      appEventsSource.includes("scheduleIdleImport") &&
+      appEventsSource.includes("prefetchTravelGlanceRuntime"),
   };
 }
 
@@ -333,6 +349,16 @@ function evaluateBudgets(metrics, budgetConfig) {
       budget: budgetConfig.staticSiteWideSourceDeferral,
       pass: metrics.staticSiteWideSourceDeferral === budgetConfig.staticSiteWideSourceDeferral,
     },
+    deferredSourcePickerRuntime: {
+      actual: metrics.deferredSourcePickerRuntime,
+      budget: budgetConfig.deferredSourcePickerRuntime,
+      pass: metrics.deferredSourcePickerRuntime === budgetConfig.deferredSourcePickerRuntime,
+    },
+    idleInteractionChunkPrefetch: {
+      actual: metrics.idleInteractionChunkPrefetch,
+      budget: budgetConfig.idleInteractionChunkPrefetch,
+      pass: metrics.idleInteractionChunkPrefetch === budgetConfig.idleInteractionChunkPrefetch,
+    },
   };
 }
 
@@ -414,6 +440,24 @@ function recommendationsFor(metrics) {
       signal: "static site-wide views can render from the entry manifest",
       action:
         "Keep Blog index, Gallery, and Travel from loading the active source shard during boot; source shards should start at Zen/article or source-scoped views.",
+    });
+  }
+  if (metrics.deferredSourcePickerRuntime) {
+    recommendations.push({
+      area: "source-picker-first-interaction",
+      signal:
+        "Zag Select is warmed on intent/idle instead of imported during source picker construction",
+      action:
+        "Keep the styled source picker runtime off the boot path while prefetching it before the first deliberate picker open.",
+    });
+  }
+  if (metrics.idleInteractionChunkPrefetch) {
+    recommendations.push({
+      area: "interaction-prefetch",
+      signal:
+        "Gallery lightbox and Travel Glance chunks are prefetched after the relevant DOM appears",
+      action:
+        "Continue moving heavy first-interaction chunks to intent/idle prefetch boundaries instead of eager imports.",
     });
   }
   if (metrics.largestAsyncAssets.length > 0) {

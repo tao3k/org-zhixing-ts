@@ -68,15 +68,26 @@ describe("Org Zhixing performance regression gates", () => {
 
   it("keeps parser runtime and source shards off static site-wide startup", () => {
     const app = readFileSync("src/app.ts", "utf8");
+    const appEvents = readFileSync("src/appEvents.ts", "utf8");
     const orgizeClient = readFileSync("src/orgizeClient.ts", "utf8");
     const perfScript = readFileSync("scripts/bench-org-zhixing-ui.mjs", "utf8");
+    const sourcePicker = readFileSync("src/sourcePicker.ts", "utf8");
 
     expect(orgizeClient).not.toContain("this.#worker = options.createWorker();");
     expect(orgizeClient).toContain("#workerForRequest()");
     expect(app).toContain("#viewNeedsActiveSource()");
     expect(app).toContain("#canRenderStaticSiteWideView()");
+    const sourcePickerConstructor = sourcePicker.match(
+      /constructor\(root: HTMLElement, sources: SourceItem\[\], selected: string\) \{([\s\S]*?)\n  \}/,
+    )?.[1];
+    expect(sourcePickerConstructor).not.toContain("#loadRuntime");
+    expect(sourcePicker).toContain("#scheduleIdleWarmup()");
+    expect(appEvents).toContain("scheduleIdleImport");
+    expect(appEvents).toContain("prefetchTravelGlanceRuntime");
     expect(perfScript).toContain("lazyParserWorker: true");
     expect(perfScript).toContain("staticSiteWideSourceDeferral: true");
+    expect(perfScript).toContain("deferredSourcePickerRuntime: true");
+    expect(perfScript).toContain("idleInteractionChunkPrefetch: true");
   });
 
   it("keeps static Blog generation on one article per discovered Org file", () => {
@@ -152,6 +163,8 @@ describe("Org Zhixing performance regression gates", () => {
     expect(appUi).not.toContain("@zag-js/select");
     expect(sourcePicker).not.toMatch(/^import\s+\{[^}]*\}\s+from "@zag-js\/select"/m);
     expect(sourcePicker).toContain('import("@zag-js/select")');
+    expect(sourcePicker).toContain("#bindWarmupIntent()");
+    expect(sourcePicker).toContain("#scheduleIdleWarmup()");
     expect(perfScript).toContain("eagerZagSelect: false");
     expect(perfScript).toContain("dynamicZagSelectChunk");
   });
