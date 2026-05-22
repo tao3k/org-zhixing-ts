@@ -34,6 +34,7 @@ import {
   withAttachmentInventory,
   withCapturePlan,
   withLint,
+  withSemanticSections,
   type OrgizeDocumentView,
 } from "./model";
 import { createAgentMemoryView } from "./memoryModel";
@@ -45,6 +46,7 @@ import {
   documentViewFromStaticSource,
   loadAllStaticSources,
   loadStaticMemoryForSource,
+  loadStaticSectionIndexForSource,
   loadStaticSourceFor,
   type StaticSiteData,
   type StaticSourceProjection,
@@ -85,6 +87,7 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
   #siteNotes: SiteNoteSource[] | null = null;
   #sourceItem: SourceItem | null = null;
   #documentView: OrgizeDocumentView | null = null;
+  #semanticSectionsReady = false;
   #renderedHtml = "";
   #pendingMessage = "Loading Org parser...";
   #articleMessage = "Rendering article...";
@@ -233,6 +236,7 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
     }
     this.#sourceOrg = "";
     this.#documentView = null;
+    this.#semanticSectionsReady = false;
     this.#renderedHtml = "";
     this.#timings = {};
     this.#viewCache.clear();
@@ -247,6 +251,7 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
     if (staticSource && this.#siteConfig) {
       const startedAt = performance.now();
       this.#documentView = documentViewFromStaticSource(staticSource, this.#siteConfig.agenda);
+      this.#semanticSectionsReady = Boolean(staticSource.sectionIndex);
       this.#renderedHtml = staticSource.html;
       syncBlogArticleSelection(this.#documentView, this.#blog);
       this.#pendingMessage = "";
@@ -281,6 +286,7 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
       null,
       semanticSections.value.records,
     );
+    this.#semanticSectionsReady = true;
     syncBlogArticleSelection(this.#documentView, this.#blog);
     this.#pendingMessage = "";
     this.#viewCache.clear();
@@ -334,6 +340,9 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
     }
     if (this.#currentView === "travel" && this.#staticSite?.travel) {
       return;
+    }
+    if (this.#viewNeedsSemanticSections()) {
+      await this.#refreshSectionIndexIfNeeded(version);
     }
     if (this.#currentView === "agenda") {
       await this.#refreshAgendaIfNeeded();
@@ -396,6 +405,34 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
     this.#documentView = agenda.document;
     this.#clearAgendaCache();
     this.#pendingMessage = "";
+  }
+
+  async #refreshSectionIndexIfNeeded(version: number): Promise<void> {
+    if (!this.#documentView || this.#semanticSectionsReady) {
+      return;
+    }
+    if (this.#staticSite && this.#sourceItem) {
+      this.#pendingMessage = "Loading static section index...";
+      this.#render();
+      const sectionIndex = await loadStaticSectionIndexForSource(
+        this.#staticSite,
+        this.#sourceItem,
+      );
+      if (version !== this.#documentVersion) {
+        return;
+      }
+      this.#semanticSectionsReady = true;
+      if (sectionIndex) {
+        this.#documentView = withSemanticSections(this.#documentView, sectionIndex.records);
+        this.#viewCache.delete("records");
+        this.#viewCache.delete("memory");
+        this.#viewCache.delete("travel");
+        clearBlogCache(this.#viewCache);
+      }
+      this.#pendingMessage = "";
+      return;
+    }
+    this.#semanticSectionsReady = true;
   }
 
   async #refreshMemoryIfNeeded(): Promise<void> {
@@ -483,18 +520,23 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
     }
     this.#pendingMessage = "Loading static notes...";
     this.#render();
-    const sources = await this.#loadAllStaticSources();
+    const sources = await this.#loadAllStaticSources({ sectionIndex: true });
     this.#siteNotes = siteNoteSources(sources, this.#siteConfig.agenda);
     this.#viewCache.clear();
     this.#pendingMessage = "";
   }
 
-  async #loadAllStaticSources(): Promise<StaticSourceProjection[]> {
-    if (this.#staticSources) {
+  async #loadAllStaticSources(
+    options: { sectionIndex?: boolean } = {},
+  ): Promise<StaticSourceProjection[]> {
+    if (this.#staticSources && !options.sectionIndex) {
       return this.#staticSources;
     }
-    this.#staticSources = await loadAllStaticSources(this.#staticSite);
-    return this.#staticSources;
+    const sources = await loadAllStaticSources(this.#staticSite, options);
+    if (!options.sectionIndex) {
+      this.#staticSources = sources;
+    }
+    return sources;
   }
 
   async #refreshCaptureIfNeeded(): Promise<void> {
@@ -697,6 +739,15 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
       case "memory":
         return true;
     }
+  }
+
+  #viewNeedsSemanticSections(): boolean {
+    return (
+      (this.#currentView === "blog" && this.#blog.zenMode) ||
+      this.#currentView === "memory" ||
+      (this.#currentView === "records" && !this.#staticSite) ||
+      (this.#currentView === "travel" && !this.#staticSite?.travel)
+    );
   }
 
   #canRenderStaticSiteWideView(): boolean {

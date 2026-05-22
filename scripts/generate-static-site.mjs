@@ -16,6 +16,8 @@ const sourceShardPublicDir = "org-zhixing.sources";
 const sourceShardRoot = resolve(outputRoot, sourceShardPublicDir);
 const sourceMemoryShardPublicDir = "org-zhixing.memory";
 const sourceMemoryShardRoot = resolve(outputRoot, sourceMemoryShardPublicDir);
+const sourceSectionShardPublicDir = "org-zhixing.sections";
+const sourceSectionShardRoot = resolve(outputRoot, sourceSectionShardPublicDir);
 const configPath = "org-zhixing.toml";
 const htmlWindow = new Window({
   settings: {
@@ -92,8 +94,10 @@ const projectSource = async (source, config) => {
 const writeSourceShards = async (sources) => {
   await rm(sourceShardRoot, { recursive: true, force: true });
   await rm(sourceMemoryShardRoot, { recursive: true, force: true });
+  await rm(sourceSectionShardRoot, { recursive: true, force: true });
   await mkdir(sourceShardRoot, { recursive: true });
   await mkdir(sourceMemoryShardRoot, { recursive: true });
+  await mkdir(sourceSectionShardRoot, { recursive: true });
   await Promise.all(
     sources.flatMap((source) => [
       writeFile(
@@ -104,6 +108,11 @@ const writeSourceShards = async (sources) => {
       writeFile(
         sourceMemoryShardPath(source),
         `${JSON.stringify(sourceMemoryShard(source))}\n`,
+        "utf8",
+      ),
+      writeFile(
+        sourceSectionShardPath(source),
+        `${JSON.stringify(sourceSectionShard(source))}\n`,
         "utf8",
       ),
     ]),
@@ -119,20 +128,26 @@ const sourceSummary = (source) => ({
   sourceBytes: source.sourceBytes,
   shardPath: joinPath(sourceShardPublicDir, `${safeShardId(source.id)}.json`),
   memoryShardPath: sourceMemoryShardPublicPath(source),
+  sectionShardPath: sourceSectionShardPublicPath(source),
 });
 
 const sourceShardPath = (source) => resolve(sourceShardRoot, `${safeShardId(source.id)}.json`);
 const sourceMemoryShardPath = (source) =>
   resolve(sourceMemoryShardRoot, `${safeShardId(source.id)}.json`);
+const sourceSectionShardPath = (source) =>
+  resolve(sourceSectionShardRoot, `${safeShardId(source.id)}.json`);
 
 const sourceMemoryShardPublicPath = (source) =>
   joinPath(sourceMemoryShardPublicDir, `${safeShardId(source.id)}.json`);
+const sourceSectionShardPublicPath = (source) =>
+  joinPath(sourceSectionShardPublicDir, `${safeShardId(source.id)}.json`);
 
 const sourceProjectionShard = (source) => {
-  const { memory, ...projection } = source;
+  const { memory, sectionIndex, ...projection } = source;
   return {
     ...projection,
     memoryShardPath: sourceMemoryShardPublicPath(source),
+    sectionShardPath: sourceSectionShardPublicPath(source),
   };
 };
 
@@ -141,6 +156,13 @@ const sourceMemoryShard = (source) => ({
   sourceId: source.id,
   sourceFile: source.sourceFile,
   memory: source.memory,
+});
+
+const sourceSectionShard = (source) => ({
+  schemaVersion: 1,
+  sourceId: source.id,
+  sourceFile: source.sourceFile,
+  sectionIndex: source.sectionIndex,
 });
 
 const safeShardId = (value) =>

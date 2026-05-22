@@ -13,7 +13,7 @@ export const travelViewFromStaticSite = (staticSite: StaticSiteData): TravelView
   }
   const travel = createTravelViewFromSources(
     staticSite.sources.filter(isStaticSourceProjection).map((source) => ({
-      records: source.sectionIndex.records,
+      records: source.sectionIndex?.records ?? [],
       sourceFile: source.sourceFile,
       sourceName: source.name,
     })),

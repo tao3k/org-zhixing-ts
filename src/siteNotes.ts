@@ -19,7 +19,7 @@ export const siteNoteSources = (
 ): SiteNoteSource[] =>
   sources
     .map((source) => {
-      const document = documentViewFromStaticSource(source, agenda);
+      const document = documentViewFromStaticSource(source, agenda, null, source.sectionIndex);
       return {
         id: source.id,
         name: source.name,

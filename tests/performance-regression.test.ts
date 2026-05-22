@@ -90,7 +90,7 @@ describe("Org Zhixing performance regression gates", () => {
     expect(perfScript).toContain("idleInteractionChunkPrefetch: true");
   });
 
-  it("keeps static Agent memory behind dedicated lazy shards", () => {
+  it("keeps static Agent memory and section indexes behind dedicated lazy shards", () => {
     const app = readFileSync("src/app.ts", "utf8");
     const generator = readFileSync("scripts/generate-static-site.mjs", "utf8");
     const perfScript = readFileSync("scripts/bench-org-zhixing-ui.mjs", "utf8");
@@ -98,16 +98,25 @@ describe("Org Zhixing performance regression gates", () => {
     const staticSiteData = readFileSync("src/staticSiteData.ts", "utf8");
 
     expect(generator).toContain('const sourceMemoryShardPublicDir = "org-zhixing.memory";');
+    expect(generator).toContain('const sourceSectionShardPublicDir = "org-zhixing.sections";');
     expect(generator).toContain("sourceProjectionShard(source)");
-    expect(generator).toContain("const { memory, ...projection } = source;");
+    expect(generator).toContain("const { memory, sectionIndex, ...projection } = source;");
     expect(generator).toContain("memoryShardPath: sourceMemoryShardPublicPath(source)");
+    expect(generator).toContain("sectionShardPath: sourceSectionShardPublicPath(source)");
     expect(staticSiteData).toContain("loadStaticMemoryForSource");
+    expect(staticSiteData).toContain("loadStaticSectionIndexForSource");
     expect(staticSiteData).toContain("fetchStaticMemoryShard");
+    expect(staticSiteData).toContain("fetchStaticSectionShard");
     expect(app).toContain("loadStaticMemoryForSource(this.#staticSite, this.#sourceItem)");
+    expect(app).toContain("loadStaticSectionIndexForSource(this.#staticSite, this.#sourceItem)");
     expect(rspackConfig).toContain("staticMemoryShardRoot");
+    expect(rspackConfig).toContain("staticSectionShardRoot");
     expect(rspackConfig).toContain("org-zhixing.memory/[name][ext]");
+    expect(rspackConfig).toContain("org-zhixing.sections/[name][ext]");
     expect(perfScript).toContain("memoryShardBytes");
+    expect(perfScript).toContain("sectionShardBytes");
     expect(perfScript).toContain("static-memory-shards");
+    expect(perfScript).toContain("static-section-shards");
   });
 
   it("keeps static Blog generation on one article per discovered Org file", () => {
@@ -255,7 +264,7 @@ const staticSourceWithTravelRecords = (
   projection.name = `Travel ${sourceIndex}`;
   projection.file = `travel-${sourceIndex}.org`;
   projection.sourceFile = `blog/travel-${sourceIndex}.org`;
-  projection.sectionIndex.records = travelRecords(recordsPerSource, sourceIndex * 10_000);
+  projection.sectionIndex!.records = travelRecords(recordsPerSource, sourceIndex * 10_000);
   return projection;
 };
 

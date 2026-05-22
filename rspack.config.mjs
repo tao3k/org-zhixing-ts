@@ -9,6 +9,7 @@ const publicRoot = resolve(projectRoot, "public");
 const staticManifestPath = resolve(projectRoot, ".cache/org-zhixing/static-site.json");
 const staticSourceShardRoot = resolve(projectRoot, ".cache/org-zhixing/org-zhixing.sources");
 const staticMemoryShardRoot = resolve(projectRoot, ".cache/org-zhixing/org-zhixing.memory");
+const staticSectionShardRoot = resolve(projectRoot, ".cache/org-zhixing/org-zhixing.sections");
 const orgizePackageWatchFiles = existsSync(orgizePackageRoot)
   ? [
       resolve(orgizePackageRoot, "worker.js"),
@@ -91,6 +92,14 @@ export default (_env, argv) => {
                 {
                   from: resolve(staticMemoryShardRoot, "*.json"),
                   to: "org-zhixing.memory/[name][ext]",
+                },
+              ]
+            : []),
+          ...(existsSync(staticSectionShardRoot)
+            ? [
+                {
+                  from: resolve(staticSectionShardRoot, "*.json"),
+                  to: "org-zhixing.sections/[name][ext]",
                 },
               ]
             : []),

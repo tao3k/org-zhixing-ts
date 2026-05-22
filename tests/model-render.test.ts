@@ -1132,15 +1132,23 @@ describe("Org source view projections", () => {
     } as const;
     const leanStaticSource = structuredClone(staticSource);
     delete leanStaticSource.memory;
+    delete leanStaticSource.sectionIndex;
 
     const leanDocument = documentViewFromStaticSource(leanStaticSource, agenda);
     expect(leanDocument.agentMemory).toBeNull();
+    expect(leanDocument.semanticSections).toHaveLength(0);
 
-    const document = documentViewFromStaticSource(leanStaticSource, agenda, staticSource.memory);
+    const document = documentViewFromStaticSource(
+      leanStaticSource,
+      agenda,
+      staticSource.memory,
+      staticSource.sectionIndex,
+    );
 
     expect(document.counts.attachments).toBe(1);
     expect(document.counts.memory).toBe(1);
     expect(document.agentMemory?.response.stats.totalRecords).toBe(1);
+    expect(document.semanticSections).toHaveLength(1);
     expect(document.lint).toEqual([]);
     expect(renderView({ view: "gallery", document })).toContain("1 image items");
     expect(

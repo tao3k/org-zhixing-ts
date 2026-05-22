@@ -8,6 +8,7 @@
     "staticManifestBytes": 500000,
     "sourceShardBytes": 2000000,
     "memoryShardBytes": 1000000,
+    "sectionShardBytes": 1000000,
     "largestSourceShardBytes": 800000,
     "initialScriptBytes": 1500000,
     "initialScriptCount": 4,
@@ -29,20 +30,20 @@
     "idleInteractionChunkPrefetch": true
   },
   "metrics": {
-    "staticManifestBytes": 64924,
-    "sourceShardBytes": 773652,
+    "staticManifestBytes": 65427,
+    "sourceShardBytes": 315983,
     "sourceShardCount": 8,
     "memoryShardBytes": 517761,
     "memoryShardCount": 8,
     "largestMemoryShardBytes": 155469,
     "largestMemoryShard": "org-zhixing.memory/wallpaper-gallery.json",
-    "largestSourceShardBytes": 252047,
+    "sectionShardBytes": 458882,
+    "sectionShardCount": 8,
+    "largestSectionShardBytes": 133648,
+    "largestSectionShard": "org-zhixing.sections/wallpaper-gallery.json",
+    "largestSourceShardBytes": 118557,
     "largestSourceShard": "org-zhixing.sources/wallpaper-gallery.json",
     "largestSourceShardFields": [
-      {
-        "field": "sectionIndex",
-        "bytes": 133539
-      },
       {
         "field": "attachmentInventory",
         "bytes": 107159
@@ -64,6 +65,10 @@
         "bytes": 152
       },
       {
+        "field": "sectionShardPath",
+        "bytes": 45
+      },
+      {
         "field": "memoryShardPath",
         "bytes": 43
       },
@@ -81,13 +86,13 @@
       }
     ],
     "sourceShardFieldBytes": {
-      "sectionIndex": 458044,
       "attachmentInventory": 172647,
       "agendaView": 77030,
       "html": 31913,
       "viewIndex": 29398,
       "agendaRange": 1216,
       "lint": 812,
+      "sectionShardPath": 343,
       "memoryShardPath": 327,
       "sourceFile": 207,
       "file": 136,
@@ -99,12 +104,18 @@
       "sourceId": 135,
       "schemaVersion": 8
     },
-    "initialScriptBytes": 947399,
+    "sectionShardFieldBytes": {
+      "sectionIndex": 458044,
+      "sourceFile": 207,
+      "sourceId": 135,
+      "schemaVersion": 8
+    },
+    "initialScriptBytes": 959150,
     "initialScriptCount": 3,
     "initialScripts": [
       "assets/runtime.545635b2.js",
       "assets/vendors-node_modules_fontsource-variable_inter_files_inter-latin-wght-normal_woff2-node_modul-38c2c2.984ee745.js",
-      "assets/app.32797c0f.js"
+      "assets/app.e54c37ed.js"
     ],
     "parserWorkerScriptBytes": 119867,
     "wasmAssetBytes": 2158753,
@@ -170,10 +181,10 @@
     "idleInteractionChunkPrefetch": true,
     "staticManifestParse": {
       "name": "staticManifestParse",
-      "minMs": 0.12,
+      "minMs": 0.13,
       "p50Ms": 0.13,
-      "p95Ms": 0.17,
-      "maxMs": 0.44,
+      "p95Ms": 0.14,
+      "maxMs": 0.38,
       "avgMs": 0.14
     },
     "travelProjectionRead": {
@@ -181,18 +192,18 @@
       "minMs": 0,
       "p50Ms": 0,
       "p95Ms": 0,
-      "maxMs": 0,
+      "maxMs": 0.01,
       "avgMs": 0
     }
   },
   "budgetResults": {
     "staticManifestBytes": {
-      "actual": 64924,
+      "actual": 65427,
       "budget": 500000,
       "pass": true
     },
     "sourceShardBytes": {
-      "actual": 773652,
+      "actual": 315983,
       "budget": 2000000,
       "pass": true
     },
@@ -201,13 +212,18 @@
       "budget": 1000000,
       "pass": true
     },
+    "sectionShardBytes": {
+      "actual": 458882,
+      "budget": 1000000,
+      "pass": true
+    },
     "largestSourceShardBytes": {
-      "actual": 252047,
+      "actual": 118557,
       "budget": 800000,
       "pass": true
     },
     "initialScriptBytes": {
-      "actual": 947399,
+      "actual": 959150,
       "budget": 1500000,
       "pass": true
     },
@@ -222,7 +238,7 @@
       "pass": true
     },
     "staticManifestParseP95Ms": {
-      "actual": 0.17,
+      "actual": 0.14,
       "budget": 80,
       "pass": true
     },
@@ -300,7 +316,7 @@
   "recommendations": [
     {
       "area": "static-manifest-shards",
-      "signal": "entry manifest is 63 KiB; 8 source shards are 756 KiB",
+      "signal": "entry manifest is 64 KiB; 8 source shards are 309 KiB",
       "action": "Keep site-wide Gallery and Travel on compact projections; load full source shards only for source-scoped or Records views."
     },
     {
@@ -309,9 +325,14 @@
       "action": "Keep Memory view on the dedicated shard path; do not merge memory back into source shards for Blog, Gallery, Records, or Travel."
     },
     {
-      "area": "section-index-shard-split",
-      "signal": "sectionIndex accounts for 447 KiB of 756 KiB source shards",
-      "action": "Split sectionIndex next if Records and article rendering need independent load paths at a larger corpus scale."
+      "area": "static-section-shards",
+      "signal": "8 section shards are 448 KiB and source shards contain no sectionIndex field",
+      "action": "Keep Records, Memory, and Zen article rendering on the section-shard path while preserving lighter source shards for other views."
+    },
+    {
+      "area": "attachment-inventory-shard-split",
+      "signal": "attachmentInventory accounts for 169 KiB of 309 KiB source shards",
+      "action": "Consider splitting attachmentInventory next if source-scoped Blog or Agenda should load without gallery metadata."
     },
     {
       "area": "parser-worker-startup",

@@ -241,6 +241,9 @@ describe("Org Zhixing navigator", () => {
         "/org-zhixing.sources/wallpaper-gallery.json",
         "/org-zhixing.sources/demo.json",
         "/org-zhixing.sources/travel.json",
+        "/org-zhixing.sections/wallpaper-gallery.json",
+        "/org-zhixing.sections/demo.json",
+        "/org-zhixing.sections/travel.json",
       ]),
     );
     expect(fetchedPaths(fetch)).not.toContain("/org-zhixing.memory/wallpaper-gallery.json");
@@ -248,6 +251,7 @@ describe("Org Zhixing navigator", () => {
     clickNav("memory");
     await waitForView("memory");
     await vi.waitFor(() => expect(document.querySelectorAll(".memory-record")).toHaveLength(1));
+    expect(fetchedPaths(fetch)).toContain("/org-zhixing.sections/wallpaper-gallery.json");
     expect(fetchedPaths(fetch)).toContain("/org-zhixing.memory/wallpaper-gallery.json");
     expect(createWorker).not.toHaveBeenCalled();
   });
@@ -297,6 +301,17 @@ const fetchShardedStaticFixture = () => {
       },
     ]),
   );
+  const sectionShards = new Map(
+    sources.map((source) => [
+      `/org-zhixing.sections/${source.id}.json`,
+      {
+        schemaVersion: 1,
+        sourceId: source.id,
+        sourceFile: source.sourceFile,
+        sectionIndex: source.sectionIndex,
+      },
+    ]),
+  );
   return async (input: RequestInfo | URL) => {
     const url = input instanceof URL ? input : new URL(String(input), window.location.href);
     if (url.pathname.endsWith("/org-zhixing.toml")) {
@@ -312,6 +327,10 @@ const fetchShardedStaticFixture = () => {
     const memoryShard = memoryShards.get(url.pathname);
     if (memoryShard) {
       return jsonResponse(memoryShard);
+    }
+    const sectionShard = sectionShards.get(url.pathname);
+    if (sectionShard) {
+      return jsonResponse(sectionShard);
     }
     return new Response("not found", { status: 404 });
   };
@@ -371,13 +390,16 @@ const shardedStaticSiteFixture = (sources: StaticSourceProjection[]): StaticSite
     sourceBytes: source.sourceBytes,
     shardPath: `org-zhixing.sources/${source.id}.json`,
     memoryShardPath: `org-zhixing.memory/${source.id}.json`,
+    sectionShardPath: `org-zhixing.sections/${source.id}.json`,
   })),
 });
 
 const sourceShardFixture = (source: StaticSourceProjection): StaticSourceProjection => {
   const projection = structuredClone(source);
   delete projection.memory;
+  delete projection.sectionIndex;
   projection.memoryShardPath = `org-zhixing.memory/${source.id}.json`;
+  projection.sectionShardPath = `org-zhixing.sections/${source.id}.json`;
   return projection;
 };
 
@@ -391,7 +413,7 @@ const travelProjection = (): StaticSourceProjection => {
   projection.sourceBytes = 256;
   projection.html = "<main><h1>Travel Demo</h1></main>";
   projection.viewIndex.records = [];
-  projection.sectionIndex.records = [
+  projection.sectionIndex!.records = [
     sectionRecord({
       effectiveTags: ["travel"],
       level: 1,
@@ -429,10 +451,10 @@ const demoProjection = (): StaticSourceProjection => {
   projection.sourceFile = "blog/org-zhixing-demo.org";
   projection.html = "<main><h1>Demo Source</h1><p>Demo rendered body</p></main>";
   projection.viewIndex.records[0].title = "Demo Source";
-  projection.sectionIndex.records[0].title = "Demo Source";
-  projection.sectionIndex.records[0].titleText = "Demo Source";
-  projection.sectionIndex.records[0].outlinePath = ["Demo Source"];
-  projection.sectionIndex.records[0].outlinePathText = ["Demo Source"];
+  projection.sectionIndex!.records[0].title = "Demo Source";
+  projection.sectionIndex!.records[0].titleText = "Demo Source";
+  projection.sectionIndex!.records[0].outlinePath = ["Demo Source"];
+  projection.sectionIndex!.records[0].outlinePathText = ["Demo Source"];
   projection.attachmentInventory.entries[0].sectionTitle = "Demo Source";
   projection.attachmentInventory.display[0].sectionTitle = "Demo Source";
   projection.attachmentInventory.display[0].sectionTitleText = "Demo Source";
@@ -483,7 +505,7 @@ const blogProjection = (): StaticSourceProjection => {
       title: "Second Article",
     }),
   ];
-  projection.sectionIndex.records = [
+  projection.sectionIndex!.records = [
     sectionRecord({
       effectiveTags: ["blog", "writing"],
       level: 1,

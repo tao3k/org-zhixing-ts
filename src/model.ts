@@ -143,6 +143,18 @@ export const withAgentMemory = (
   },
 });
 
+export const withSemanticSections = (
+  document: OrgizeDocumentView,
+  semanticSections: OrgizeSectionIndexRecordDto[],
+): OrgizeDocumentView => ({
+  ...document,
+  semanticSections,
+  counts: {
+    ...document.counts,
+    blog: blogArticlesFromDocument(document.sectionIndex, semanticSections).length,
+  },
+});
+
 export const withCapturePlan = (
   document: OrgizeDocumentView,
   capturePlan: OrgizeAgentCapturePlanResponseDto,

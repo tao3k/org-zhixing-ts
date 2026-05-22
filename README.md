@@ -146,15 +146,17 @@ uses the Rust/WASM package to precompute `viewIndex`, `sectionIndex`, rendered
 HTML, attachment inventory, memory, agenda, and lint for every discovered Org
 source.  The build ships a compact `org-zhixing.static.json` entry manifest plus
 per-source JSON shards under `org-zhixing.sources/` and lazy Agent memory shards
-under `org-zhixing.memory/`.
+under `org-zhixing.memory/`, plus lazy semantic section shards under
+`org-zhixing.sections/`.
 
 At runtime the app first looks for that static manifest. GitHub Pages therefore
 hydrates source navigation, site-wide Gallery, and Travel from immutable compact
 static data. Source-scoped views and the site-wide Notes view load source
-shards on demand instead of parsing one large manifest up front, while Memory
-loads its dedicated memory shard only when the Memory view needs it. If the
-manifest is absent, such as in local watch mode, the app falls back to the
-worker path.
+shards on demand instead of parsing one large manifest up front. Notes, Memory,
+and Zen article rendering load semantic section shards only when they need
+heading/body metadata, while Memory loads its dedicated memory shard only when
+the Memory view needs it. If the manifest is absent, such as in local watch
+mode, the app falls back to the worker path.
 The status line reports `static` timing for precomputed data and
 `parse/agenda/capture/lint/html` timings for dynamic projections. Run
 `just perf` for the WASM and UI performance gates. The durable reports live in
