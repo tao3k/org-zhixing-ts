@@ -29,13 +29,13 @@
 .reader-mode-button {
   flex: 0 0 auto;
   border: 1px solid var(--hairline);
-  border-radius: 8px;
+  border-radius: var(--radius-ui);
   padding: 9px 13px;
   color: var(--face-normal);
   background: var(--surface-paper);
   cursor: pointer;
   font-size: 0.84rem;
-  font-weight: 850;
+  font-weight: var(--weight-strong);
 }
 
 .reader-mode-button:hover {
@@ -62,25 +62,26 @@
   gap: 3px;
   flex: 0 0 min(280px, 76vw);
   min-width: 0;
-  border: 1px solid var(--hairline-soft);
-  border-radius: 8px;
+  border: 1px solid transparent;
+  border-left-color: var(--hairline-soft);
+  border-radius: 0;
   padding: 10px 12px;
   color: var(--face-normal);
-  background: var(--surface-paper);
+  background: transparent;
   cursor: pointer;
   text-align: left;
 }
 
 .article-tab:hover,
 .article-tab.active {
-  border-color: var(--blue-7);
-  background: var(--surface-salient);
+  border-left-color: var(--face-salient);
+  background: var(--surface-subtle);
 }
 
 .article-tab span {
   color: var(--face-faded);
   font-size: 0.66rem;
-  font-weight: 850;
+  font-weight: var(--weight-medium);
   text-transform: uppercase;
 }
 
@@ -110,7 +111,7 @@
   justify-content: space-between;
   color: var(--face-faded);
   font-size: 0.72rem;
-  font-weight: 850;
+  font-weight: var(--weight-medium);
   text-transform: uppercase;
 }
 
@@ -160,13 +161,13 @@
 }
 
 .toc-tags em {
-  border-radius: 999px;
+  border-radius: var(--radius-label);
   padding: 2px 6px;
   color: var(--face-popout);
   background: var(--surface-popout);
   font-size: 0.68rem;
   font-style: normal;
-  font-weight: 820;
+  font-weight: var(--weight-medium);
 }
 
 .blog-toc a:hover {
@@ -186,11 +187,10 @@
 
 .blog-reader:not(.is-zen) .blog-article {
   max-width: none;
-  border: 1px solid var(--hairline-soft);
-  border-radius: var(--radius-ui);
-  padding: 42px clamp(28px, 5vw, 64px) 62px;
-  background: var(--surface-paper);
-  box-shadow: var(--shadow-reading);
+  border-left: 1px solid var(--hairline-soft);
+  padding: 34px 0 56px 28px;
+  background: transparent;
+  box-shadow: none;
 }
 
 .zen-toolbar {
@@ -220,7 +220,7 @@
   padding: 10px 0;
   color: var(--face-faded);
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: var(--weight-medium);
 }
 
 .blog-reader.is-zen .blog-article {

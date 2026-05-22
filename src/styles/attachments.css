@@ -48,7 +48,7 @@
 .attachment-metrics dt {
   color: var(--face-muted);
   font-size: 0.66rem;
-  font-weight: 850;
+  font-weight: var(--weight-medium);
   text-transform: uppercase;
 }
 
@@ -56,7 +56,7 @@
   margin: 2px 0 0;
   color: var(--face-strong);
   font-size: 1.1rem;
-  font-weight: 900;
+  font-weight: var(--weight-heavy);
 }
 
 .attachment-grid {
@@ -98,7 +98,7 @@
   place-items: center;
   color: var(--face-salient);
   font-size: 1.7rem;
-  font-weight: 900;
+  font-weight: var(--weight-heavy);
 }
 
 .attachment-card-body {
@@ -109,12 +109,12 @@
 
 .attachment-card-body > span {
   width: fit-content;
-  border-radius: 999px;
+  border-radius: var(--radius-label);
   padding: 3px 8px;
   color: var(--face-popout);
   background: var(--surface-popout);
   font-size: 0.68rem;
-  font-weight: 850;
+  font-weight: var(--weight-medium);
   text-transform: uppercase;
 }
 

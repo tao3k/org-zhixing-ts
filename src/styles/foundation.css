@@ -3,7 +3,8 @@
   color: var(--face-normal);
   background: var(--surface-canvas);
   font-family: var(--font-sans), var(--font-cjk);
-  line-height: 1.5;
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-leading);
 }
 
 * {
@@ -56,15 +57,15 @@ button {
 
 .site-brand span {
   font-size: 1rem;
-  font-weight: 900;
+  font-weight: var(--weight-heavy);
   line-height: 1.1;
 }
 
 .site-brand small {
   color: var(--face-faded);
   font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -94,7 +95,7 @@ button {
   position: relative;
   min-height: 300px;
   border: 1px solid var(--hairline-soft);
-  border-radius: 8px;
+  border-radius: var(--radius-ui);
   background:
     linear-gradient(var(--surface-quiet) 1px, transparent 1px),
     linear-gradient(90deg, var(--surface-quiet) 1px, transparent 1px),
@@ -138,13 +139,12 @@ button {
   min-height: 42px;
   place-items: center;
   border: 1px solid var(--hairline-strong);
-  border-radius: 8px;
+  border-radius: var(--radius-ui);
   padding: 8px 10px;
   color: var(--face-strong);
   background: var(--surface-paper);
-  box-shadow: var(--shadow-hover);
   font-size: 0.78rem;
-  font-weight: 900;
+  font-weight: var(--weight-strong);
 }
 
 .map-node--core {
@@ -200,7 +200,7 @@ header:not(.site-header) {
   margin: 0 0 4px;
   color: var(--face-faded);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   letter-spacing: 0;
   text-transform: uppercase;
 }
@@ -280,7 +280,7 @@ h1 {
 .source-feed-heading {
   color: var(--face-faded);
   font-size: 0.72rem;
-  font-weight: 850;
+  font-weight: var(--weight-medium);
   text-transform: uppercase;
 }
 
@@ -302,7 +302,7 @@ h1 {
   width: 100%;
   min-width: 0;
   border: 1px solid var(--hairline);
-  border-radius: 8px;
+  border-radius: var(--radius-ui);
   padding: 16px;
   color: var(--face-normal);
   background: var(--surface-paper);
@@ -310,27 +310,24 @@ h1 {
   text-align: left;
   transition:
     border-color 150ms ease,
-    box-shadow 150ms ease,
-    transform 150ms ease;
+    background 150ms ease;
 }
 
 .source-block:hover {
   border-color: var(--hairline-strong);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-hover);
+  background: var(--surface-subtle);
 }
 
 .source-block.active {
   border-color: var(--blue-7);
   background: var(--surface-salient);
-  box-shadow: 0 10px 24px var(--blue-a3);
 }
 
 .source-block span,
 .workspace-bar span {
   color: var(--face-faded);
   font-size: 0.68rem;
-  font-weight: 850;
+  font-weight: var(--weight-medium);
   text-transform: uppercase;
 }
 
@@ -350,13 +347,13 @@ h1 {
 
 .source-block em {
   width: fit-content;
-  border-radius: 999px;
+  border-radius: var(--radius-label);
   padding: 3px 8px;
   color: var(--face-salient);
   background: var(--surface-salient);
   font-size: 0.7rem;
   font-style: normal;
-  font-weight: 800;
+  font-weight: var(--weight-medium);
 }
 
 .source-select-hidden,
@@ -398,13 +395,13 @@ nav {
 
 nav button {
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-ui);
   padding: 9px 12px;
   color: var(--face-normal);
   background: transparent;
   cursor: pointer;
   font-size: 0.88rem;
-  font-weight: 850;
+  font-weight: var(--weight-strong);
 }
 
 nav button.active {

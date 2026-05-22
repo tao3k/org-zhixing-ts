@@ -8,6 +8,7 @@ This is the coordinate map for durable Org Zhixing documentation.
 |------+-------|
 | 00-09 | Index and documentation coordination |
 | 10-19 | Architecture, configuration, and Agent projections |
+| 20-29 | Design systems and reader surface contracts |
 | 90-99 | Verification, performance, and operations |
 
 ** Coordinates
@@ -17,6 +18,7 @@ This is the coordinate map for durable Org Zhixing documentation.
 | 00.01 | [[file:00.01_jdex.org][JDex]] | Active |
 | 10.01 | [[file:../10_architecture/10.01_content_directory_contract.org][Content Directory Contract]] | Active |
 | 10.02 | [[file:../10_architecture/10.02_agent_travel_projection.org][Agent Travel Projection]] | Active |
+| 20.01 | [[file:../20_design/20.01_elegant_system.org][Elegant System]] | Active |
 | 90.01 | [[file:../90_operations/90.01_performance_notes.org][Performance Notes]] | Active |
 
 ** Rules

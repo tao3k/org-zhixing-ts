@@ -1,0 +1,87 @@
+* 20.01 Elegant System
+
+Org Zhixing's visual system should feel like a modern Org buffer projected into
+the browser, not like a marketing dashboard.  The design target combines two
+observations:
+
+- =org-modern= treats Org syntax as the interface.  It improves headings,
+  labels, keywords, tables, source blocks, tags, and font alignment while
+  keeping the underlying Org text editable and meaningful.
+- =elegant-emacs= shows that a small set of carefully named faces can carry a
+  whole workspace.  The system should be minimal, consistent, and quiet before
+  it is decorative.
+
+** Contract
+
+The UI contract is a face economy:
+
+| Face | Purpose |
+|------+---------|
+| =normal= | default reading text |
+| =strong= | headings and primary labels |
+| =faded= | secondary text |
+| =muted= | counters and structural hints |
+| =salient= | navigation and active structure |
+| =popout= | warnings or attention |
+| =success= | done or valid state |
+| =critical= | errors |
+| =structural= | code, properties, and schema-like facts |
+
+Every product surface should express itself through this face set, surface
+tokens, hairlines, and small radii.  A new color or shadow is a design-system
+change, not a page-local flourish.
+
+** TypeScript Package Boundary
+
+The design system is intentionally package-backed:
+
+| Package | Responsibility |
+|---------+----------------|
+| =@radix-ui/colors= | accessible primitive color scales |
+| =@fontsource-variable/inter= | variable-pitch reading face |
+| =@fontsource/roboto-mono= | fixed-pitch code and property face |
+| =style-dictionary= | compile =tokens/elegant.json= into CSS variables |
+| =@capsizecss/core= and =@capsizecss/metrics= | derive type trim variables from font metrics |
+| =@zag-js/floating-panel= | window state, drag, resize, maximize, and restore for Zen Glance |
+| =masonry-layout= | waterfall layout for mixed media inside Zen Glance |
+| =@tanstack/virtual-core= | large Travel list windowing |
+
+The point is not to minimize dependencies.  The point is to let mature TS
+libraries own the parts that are stateful, measured, or easy to get subtly
+wrong.
+
+** Surface Rules
+
+- Reading surfaces are structured by hairlines, indentation, and whitespace
+  before cards and shadows.
+- Cards are allowed for repeated records, but they should not dominate the
+  interface or nest into other cards.
+- Labels use =--radius-label=, regular or medium weight, and semantic faces.
+  Fully rounded pill shapes are avoided unless the interaction itself is a
+  native pill-like control.
+- Product text does not use viewport-scaled font sizes.  The system uses token
+  sizes and stable line-height contracts.
+- The maximum named system weight is =--weight-heavy= at 700.  Stronger visual
+  hierarchy should come from spacing, structure, and face choice.
+- Zen Glance is a windowed reading surface.  The floating-panel state machine
+  owns its size and position; CSS only paints the shell and content.
+
+** Tests
+
+The style tests protect the contract:
+
+- =src/styles/theme.css= must be generated from =tokens/elegant.json=.
+- every token in =tokens/elegant.json= must appear in the generated theme;
+- package-backed color and font imports must stay present;
+- core reader surfaces must not reintroduce hard-coded hex colors, very heavy
+  font weights, =999px= label radii, local card shadows, or hover translation;
+- rendered Org remains semantic: headings, TODO/DONE, tags, property rows,
+  source blocks, tables, and meta chips are styled by Org meaning, not by page
+  cards.
+
+** Current Slice
+
+This slice introduces the generated token contract and migrates the foundation,
+blog reader, Travel, attachment gallery, rendered Org, and memory records onto
+the face economy.  Later slices can move agenda modules through the same gate
+once their product layout is revisited.

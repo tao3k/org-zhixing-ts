@@ -47,7 +47,7 @@
 .travel-metrics dt {
   color: var(--face-muted);
   font-size: 0.66rem;
-  font-weight: 850;
+  font-weight: var(--weight-medium);
   text-transform: uppercase;
 }
 
@@ -55,7 +55,7 @@
   margin: 2px 0 0;
   color: var(--face-strong);
   font-size: 1.1rem;
-  font-weight: 900;
+  font-weight: var(--weight-heavy);
 }
 
 .travel-layout {
@@ -74,7 +74,7 @@
   background: var(--face-strong);
   cursor: pointer;
   font-size: 0.78rem;
-  font-weight: 850;
+  font-weight: var(--weight-strong);
   text-decoration: none;
 }
 
@@ -161,18 +161,16 @@
   contain-intrinsic-size: 112px;
   padding: 10px 12px;
   cursor: pointer;
-  box-shadow: 0 5px 16px var(--slate-a2);
+  box-shadow: none;
   transition:
     border-color 140ms ease,
-    box-shadow 140ms ease,
-    transform 140ms ease;
+    background 140ms ease;
 }
 
 .travel-place-card:hover,
 .travel-place-card:focus-visible {
   border-color: var(--hairline-strong);
-  box-shadow: var(--shadow-hover);
-  transform: translateY(-1px);
+  background: var(--surface-subtle);
 }
 
 .travel-place-card .travel-card-head {
@@ -193,12 +191,12 @@
 .travel-card-kicker span,
 .travel-card-kicker b {
   width: fit-content;
-  border-radius: 999px;
+  border-radius: var(--radius-label);
   padding: 3px 8px;
   color: var(--face-salient);
   background: var(--surface-salient);
   font-size: 0.68rem;
-  font-weight: 850;
+  font-weight: var(--weight-medium);
   text-transform: uppercase;
 }
 
@@ -254,13 +252,13 @@
   min-width: 0;
   max-width: 100%;
   border: 1px solid var(--hairline-soft);
-  border-radius: 999px;
+  border-radius: var(--radius-label);
   padding: 3px 8px;
   overflow-wrap: anywhere;
   color: var(--face-normal);
   background: var(--surface-subtle);
   font-size: 0.72rem;
-  font-weight: 760;
+  font-weight: var(--weight-medium);
   white-space: normal;
 }
 
@@ -289,7 +287,7 @@
 .travel-enrich span {
   color: var(--face-muted);
   font-size: 0.68rem;
-  font-weight: 850;
+  font-weight: var(--weight-medium);
   text-transform: uppercase;
 }
 
@@ -330,13 +328,13 @@
   min-width: 0;
   max-width: 100%;
   border: 1px solid var(--hairline-soft);
-  border-radius: 999px;
+  border-radius: var(--radius-label);
   padding: 3px 7px;
   overflow-wrap: anywhere;
   color: var(--face-faded);
   background: var(--surface-subtle);
   font-size: 0.7rem;
-  font-weight: 760;
+  font-weight: var(--weight-medium);
   white-space: normal;
 }
 
@@ -350,7 +348,7 @@
   color: var(--face-salient);
   background: var(--surface-salient);
   font-size: 0.75rem;
-  font-weight: 760;
+  font-weight: var(--weight-medium);
   text-decoration: none;
   white-space: normal;
 }
@@ -387,7 +385,7 @@
   border-radius: 0;
   background: var(--surface-paper);
   pointer-events: auto;
-  box-shadow: 0 24px 70px var(--slate-a8);
+  box-shadow: var(--shadow-floating);
 }
 
 .travel-glance-layer[hidden] {
@@ -416,7 +414,7 @@
   display: block;
   color: var(--face-salient);
   font-size: 0.72rem;
-  font-weight: 900;
+  font-weight: var(--weight-heavy);
   text-transform: uppercase;
 }
 
@@ -452,7 +450,7 @@
   background: var(--surface-salient);
   cursor: pointer;
   font-size: 0.76rem;
-  font-weight: 850;
+  font-weight: var(--weight-strong);
 }
 
 .travel-glance-resize-trigger {
@@ -479,7 +477,7 @@
   width: fit-content;
   color: var(--face-salient);
   font-size: 0.72rem;
-  font-weight: 900;
+  font-weight: var(--weight-heavy);
   letter-spacing: 0;
   text-transform: uppercase;
 }
@@ -588,7 +586,7 @@
 .travel-glance-facts dt {
   color: var(--face-muted);
   font-size: 0.66rem;
-  font-weight: 850;
+  font-weight: var(--weight-medium);
   text-transform: uppercase;
 }
 

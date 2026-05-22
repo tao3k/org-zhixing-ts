@@ -22,6 +22,11 @@ name = "Architecture"
 description = "Configuration, static projection, and Agent-facing view contracts."
 
 [[areas]]
+range = "20-29"
+name = "Design systems"
+description = "Visual system contracts, theme tokens, and reader surface rules."
+
+[[areas]]
 range = "90-99"
 name = "Operations"
 description = "Verification, performance notes, and report consumption."
@@ -40,6 +45,13 @@ area = "10-19"
 directory = "docs/10_architecture"
 name = "Architecture and Agent projections"
 description = "Org-native content loading and downstream Agent consumption contracts."
+
+[[categories]]
+id = "20"
+area = "20-29"
+directory = "docs/20_design"
+name = "Org reading design system"
+description = "Org-modern and elegant-system inspired UI contracts for projection surfaces."
 
 [[categories]]
 id = "90"
