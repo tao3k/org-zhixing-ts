@@ -66,6 +66,19 @@ describe("Org Zhixing performance regression gates", () => {
     expect(perfScript).toContain("dynamicBlogVirtualListChunk");
   });
 
+  it("keeps parser runtime and source shards off static site-wide startup", () => {
+    const app = readFileSync("src/app.ts", "utf8");
+    const orgizeClient = readFileSync("src/orgizeClient.ts", "utf8");
+    const perfScript = readFileSync("scripts/bench-org-zhixing-ui.mjs", "utf8");
+
+    expect(orgizeClient).not.toContain("this.#worker = options.createWorker();");
+    expect(orgizeClient).toContain("#workerForRequest()");
+    expect(app).toContain("#viewNeedsActiveSource()");
+    expect(app).toContain("#canRenderStaticSiteWideView()");
+    expect(perfScript).toContain("lazyParserWorker: true");
+    expect(perfScript).toContain("staticSiteWideSourceDeferral: true");
+  });
+
   it("keeps static Blog generation on one article per discovered Org file", () => {
     const generator = readFileSync("scripts/generate-static-site.mjs", "utf8");
 

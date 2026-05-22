@@ -57,7 +57,7 @@ export type BlogReaderRenderOptions = {
   articleHtml: string;
   articleMessage: string;
   blogIndex: StaticBlogIndex | null | undefined;
-  document: OrgizeDocumentView;
+  document: OrgizeDocumentView | null;
   selectedRangeStart: number | null;
   sourceFile: string | undefined;
   tagFilter: string | null;
@@ -78,9 +78,12 @@ export const renderBlogReader = ({
   timeFilter,
   zenMode,
 }: BlogReaderRenderOptions): string => {
-  const articles = blogTimelineArticles(document);
+  const articles = document ? blogTimelineArticles(document) : [];
   if (!zenMode) {
     return renderBlogIndex(blogIndex ?? blogIndexFromDocument(articles), tagFilter, timeFilter);
+  }
+  if (!document) {
+    return `<div class="empty blog-article-empty">${escapeHtml(articleMessage || "Loading Org source...")}</div>`;
   }
   const selectedArticle = prepareRenderedArticle(articleHtml, document, sourceFile);
   const emptyMessage =

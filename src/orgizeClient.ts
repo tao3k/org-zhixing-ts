@@ -45,17 +45,15 @@ export type OrgizeSessionOptions = {
 };
 
 export class OrgizeSession {
-  #worker: Worker;
+  #worker: Worker | null = null;
   #nextRequestId = 0;
   #pending = new Map<string, PendingRequest>();
   #sessionId: string;
+  #createWorker: () => Worker;
 
   constructor(options: OrgizeSessionOptions) {
     this.#sessionId = options.sessionId ?? "org-zhixing-demo";
-    this.#worker = options.createWorker();
-    this.#worker.addEventListener("message", (event) => {
-      this.#handleMessage(event.data as OrgizeWorkerMessage);
-    });
+    this.#createWorker = options.createWorker;
   }
 
   init(): Promise<TimedResult<OrgizeInitInfo>> {
@@ -162,11 +160,14 @@ export class OrgizeSession {
   }
 
   dispose(): void {
-    this.#worker.postMessage({
-      command: "dispose",
-      sessionId: this.#sessionId,
-    } satisfies OrgizeWorkerRequest);
-    this.#worker.terminate();
+    if (this.#worker) {
+      this.#worker.postMessage({
+        command: "dispose",
+        sessionId: this.#sessionId,
+      } satisfies OrgizeWorkerRequest);
+      this.#worker.terminate();
+      this.#worker = null;
+    }
     this.#pending.clear();
   }
 
@@ -182,6 +183,7 @@ export class OrgizeSession {
       sessionId: this.#sessionId,
     } as OrgizeWorkerRequest;
     const startedAt = performance.now();
+    const worker = this.#workerForRequest();
 
     return new Promise<TimedResult<T>>((resolve, reject) => {
       this.#pending.set(requestId, {
@@ -196,8 +198,18 @@ export class OrgizeSession {
           reject(reason);
         },
       });
-      this.#worker.postMessage(message);
+      worker.postMessage(message);
     });
+  }
+
+  #workerForRequest(): Worker {
+    if (!this.#worker) {
+      this.#worker = this.#createWorker();
+      this.#worker.addEventListener("message", (event) => {
+        this.#handleMessage(event.data as OrgizeWorkerMessage);
+      });
+    }
+    return this.#worker;
   }
 
   #handleMessage(message: OrgizeWorkerMessage): void {

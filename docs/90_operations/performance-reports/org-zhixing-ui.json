@@ -21,7 +21,9 @@
     "eagerTravelVirtualList": false,
     "eagerMasonryLayout": false,
     "eagerFloatingPanel": false,
-    "eagerZagSelect": false
+    "eagerZagSelect": false,
+    "lazyParserWorker": true,
+    "staticSiteWideSourceDeferral": true
   },
   "metrics": {
     "staticManifestBytes": 64445,
@@ -29,12 +31,103 @@
     "sourceShardCount": 8,
     "largestSourceShardBytes": 407361,
     "largestSourceShard": "org-zhixing.sources/wallpaper-gallery.json",
-    "initialScriptBytes": 923015,
+    "largestSourceShardFields": [
+      {
+        "field": "memory",
+        "bytes": 155366
+      },
+      {
+        "field": "sectionIndex",
+        "bytes": 133539
+      },
+      {
+        "field": "attachmentInventory",
+        "bytes": 107159
+      },
+      {
+        "field": "html",
+        "bytes": 7527
+      },
+      {
+        "field": "agendaView",
+        "bytes": 2070
+      },
+      {
+        "field": "viewIndex",
+        "bytes": 1238
+      },
+      {
+        "field": "agendaRange",
+        "bytes": 152
+      },
+      {
+        "field": "lint",
+        "bytes": 33
+      },
+      {
+        "field": "sourceFile",
+        "bytes": 28
+      },
+      {
+        "field": "file",
+        "bytes": 23
+      }
+    ],
+    "sourceShardFieldBytes": {
+      "memory": 516971,
+      "sectionIndex": 458044,
+      "attachmentInventory": 172647,
+      "agendaView": 77030,
+      "html": 31913,
+      "viewIndex": 29398,
+      "agendaRange": 1216,
+      "lint": 812,
+      "sourceFile": 207,
+      "file": 136,
+      "orgTitle": 34
+    },
+    "initialScriptBytes": 930559,
     "initialScriptCount": 3,
     "initialScripts": [
       "assets/runtime.545635b2.js",
       "assets/vendors-node_modules_fontsource-variable_inter_files_inter-latin-wght-normal_woff2-node_modul-38c2c2.984ee745.js",
-      "assets/app.b82261ee.js"
+      "assets/app.1d79095e.js"
+    ],
+    "parserWorkerScriptBytes": 119867,
+    "wasmAssetBytes": 2158753,
+    "largestAsyncAssets": [
+      {
+        "path": "assets/vendors-node_modules_zag-js_select_dist_index_mjs.57e2c591.js",
+        "bytes": 649116
+      },
+      {
+        "path": "assets/vendors-node_modules_photoswipe_dist_photoswipe_esm_js.937f6f46.js",
+        "bytes": 509404
+      },
+      {
+        "path": "assets/vendors-node_modules_zag-js_floating-panel_dist_index_mjs.9c71c061.js",
+        "bytes": 218042
+      },
+      {
+        "path": "assets/vendors-node_modules_masonry-layout_masonry_js.7537f6f5.js",
+        "bytes": 164218
+      },
+      {
+        "path": "assets/vendors-node_modules_photoswipe_dist_photoswipe-lightbox_esm_js.5afd0729.js",
+        "bytes": 148401
+      },
+      {
+        "path": "assets/vendors-node_modules_orgize_worker_js.1d4df895.js",
+        "bytes": 119867
+      },
+      {
+        "path": "assets/vendors-node_modules_tanstack_virtual-core_dist_esm_index_js.4da5d33b.js",
+        "bytes": 111303
+      },
+      {
+        "path": "assets/vendors-node_modules_zag-js_vanilla_dist_index_mjs.6ea589a9.js",
+        "bytes": 81284
+      }
     ],
     "blogArticles": 8,
     "blogSourceCount": 8,
@@ -58,13 +151,15 @@
     "dynamicMasonryChunk": true,
     "dynamicFloatingPanelChunk": true,
     "dynamicZagSelectChunk": true,
+    "lazyParserWorker": true,
+    "staticSiteWideSourceDeferral": true,
     "staticManifestParse": {
       "name": "staticManifestParse",
-      "minMs": 0.12,
+      "minMs": 0.13,
       "p50Ms": 0.13,
-      "p95Ms": 0.17,
-      "maxMs": 0.26,
-      "avgMs": 0.13
+      "p95Ms": 0.22,
+      "maxMs": 0.42,
+      "avgMs": 0.15
     },
     "travelProjectionRead": {
       "name": "travelProjectionRead",
@@ -92,7 +187,7 @@
       "pass": true
     },
     "initialScriptBytes": {
-      "actual": 923015,
+      "actual": 930559,
       "budget": 1500000,
       "pass": true
     },
@@ -107,7 +202,7 @@
       "pass": true
     },
     "staticManifestParseP95Ms": {
-      "actual": 0.17,
+      "actual": 0.22,
       "budget": 80,
       "pass": true
     },
@@ -160,6 +255,16 @@
       "actual": false,
       "budget": false,
       "pass": true
+    },
+    "lazyParserWorker": {
+      "actual": true,
+      "budget": true,
+      "pass": true
+    },
+    "staticSiteWideSourceDeferral": {
+      "actual": true,
+      "budget": true,
+      "pass": true
     }
   },
   "recommendations": [
@@ -167,6 +272,26 @@
       "area": "static-manifest-shards",
       "signal": "entry manifest is 63 KiB; 8 source shards are 1.2 MiB",
       "action": "Keep site-wide Gallery and Travel on compact projections; load full source shards only for source-scoped or Records views."
+    },
+    {
+      "area": "source-shard-projection-split",
+      "signal": "memory+sectionIndex account for 952 KiB of 1.2 MiB source shards",
+      "action": "Split memory and semantic section payloads into on-demand shards before scaling the corpus beyond the current demo set."
+    },
+    {
+      "area": "parser-worker-startup",
+      "signal": "parser worker chunk is 117 KiB and wasm is 2.1 MiB",
+      "action": "Keep the Org parser worker lazy so static Blog, Gallery, and Travel entry views do not fetch parser runtime before a source-scoped view needs it."
+    },
+    {
+      "area": "site-wide-static-startup",
+      "signal": "static site-wide views can render from the entry manifest",
+      "action": "Keep Blog index, Gallery, and Travel from loading the active source shard during boot; source shards should start at Zen/article or source-scoped views."
+    },
+    {
+      "area": "first-interaction-chunks",
+      "signal": "largest async chunk is assets/vendors-node_modules_zag-js_select_dist_index_mjs.57e2c591.js at 634 KiB",
+      "action": "For slow first interactions, prefetch the route-relevant chunk after idle instead of moving large TS dependencies into initial scripts."
     },
     {
       "area": "virtual-list-boundary",

@@ -37,6 +37,8 @@ const budgets = {
   eagerMasonryLayout: false,
   eagerFloatingPanel: false,
   eagerZagSelect: false,
+  lazyParserWorker: true,
+  staticSiteWideSourceDeferral: true,
 };
 
 const indexHtml = await readFile(resolve(distRoot, "index.html"), "utf8");
@@ -44,6 +46,8 @@ const staticManifestText = await readFile(resolve(distRoot, "org-zhixing.static.
 const staticManifest = JSON.parse(staticManifestText);
 const assets = await assetInventory();
 const sourceShards = await sourceShardInventory();
+const sourceShardBreakdown = await sourceShardProjectionBreakdown(sourceShards);
+const sourceShardFieldBytes = aggregateShardFieldBytes(sourceShardBreakdown);
 const initialScripts = scriptSrcs(indexHtml);
 const initialScriptTexts = await Promise.all(
   initialScripts.map((script) => readFile(resolve(distRoot, script), "utf8")),
@@ -57,6 +61,7 @@ const travelProjectionRead = sample(
   "travelProjectionRead",
   () => staticManifest.travel?.places?.length ?? 0,
 );
+const runtimeBoundary = await runtimeBoundarySignals();
 
 const metrics = {
   staticManifestBytes: Buffer.byteLength(staticManifestText),
@@ -64,9 +69,14 @@ const metrics = {
   sourceShardCount: sourceShards.length,
   largestSourceShardBytes: sourceShards[0]?.bytes ?? 0,
   largestSourceShard: sourceShards[0]?.path ?? null,
+  largestSourceShardFields: sourceShardBreakdown[0]?.fields ?? [],
+  sourceShardFieldBytes,
   initialScriptBytes,
   initialScriptCount: initialScripts.length,
   initialScripts,
+  parserWorkerScriptBytes: assetBytesMatching(/orgize_worker_js/),
+  wasmAssetBytes: assetBytesMatching(/orgize_bg\..+\.wasm$/),
+  largestAsyncAssets: largestAsyncAssets(initialScripts, assets, 8),
   blogArticles: staticManifest.blog?.articleCount ?? 0,
   blogSourceCount: staticManifest.blog?.sourceCount ?? 0,
   blogTagFacetCount: staticManifest.blog?.tagFacets?.length ?? 0,
@@ -97,6 +107,8 @@ const metrics = {
     /zag-js_floating-panel/.test(script),
   ),
   dynamicZagSelectChunk: [...assets.keys()].some((script) => /zag-js_select/.test(script)),
+  lazyParserWorker: runtimeBoundary.lazyParserWorker,
+  staticSiteWideSourceDeferral: runtimeBoundary.staticSiteWideSourceDeferral,
   staticManifestParse,
   travelProjectionRead,
 };
@@ -173,6 +185,50 @@ async function sourceShardInventory() {
   } catch {
     return [];
   }
+}
+
+async function sourceShardProjectionBreakdown(shards) {
+  const breakdown = [];
+  for (const shard of shards) {
+    const value = JSON.parse(await readFile(resolve(distRoot, shard.path), "utf8"));
+    const fields = Object.entries(value)
+      .map(([field, fieldValue]) => ({
+        field,
+        bytes: Buffer.byteLength(JSON.stringify(fieldValue ?? null)),
+      }))
+      .sort((left, right) => right.bytes - left.bytes);
+    breakdown.push({
+      path: shard.path,
+      bytes: shard.bytes,
+      fields: fields.slice(0, 10),
+    });
+  }
+  return breakdown;
+}
+
+function aggregateShardFieldBytes(shards) {
+  const totals = new Map();
+  for (const shard of shards) {
+    for (const field of shard.fields) {
+      totals.set(field.field, (totals.get(field.field) ?? 0) + field.bytes);
+    }
+  }
+  return Object.fromEntries([...totals.entries()].sort((left, right) => right[1] - left[1]));
+}
+
+async function runtimeBoundarySignals() {
+  const [appSource, clientSource] = await Promise.all([
+    readFile(resolve(projectRoot, "src/app.ts"), "utf8"),
+    readFile(resolve(projectRoot, "src/orgizeClient.ts"), "utf8"),
+  ]);
+  return {
+    lazyParserWorker:
+      clientSource.includes("#workerForRequest()") &&
+      !clientSource.includes("this.#worker = options.createWorker();"),
+    staticSiteWideSourceDeferral:
+      appSource.includes("#viewNeedsActiveSource()") &&
+      appSource.includes("#canRenderStaticSiteWideView()"),
+  };
 }
 
 function scriptSrcs(html) {
@@ -267,6 +323,16 @@ function evaluateBudgets(metrics, budgetConfig) {
       budget: budgetConfig.eagerZagSelect,
       pass: metrics.eagerZagSelect === budgetConfig.eagerZagSelect,
     },
+    lazyParserWorker: {
+      actual: metrics.lazyParserWorker,
+      budget: budgetConfig.lazyParserWorker,
+      pass: metrics.lazyParserWorker === budgetConfig.lazyParserWorker,
+    },
+    staticSiteWideSourceDeferral: {
+      actual: metrics.staticSiteWideSourceDeferral,
+      budget: budgetConfig.staticSiteWideSourceDeferral,
+      pass: metrics.staticSiteWideSourceDeferral === budgetConfig.staticSiteWideSourceDeferral,
+    },
   };
 }
 
@@ -290,6 +356,16 @@ function recommendationsFor(metrics) {
       signal: `entry manifest is ${formatBytes(metrics.staticManifestBytes)}; ${metrics.sourceShardCount} source shards are ${formatBytes(metrics.sourceShardBytes)}`,
       action:
         "Keep site-wide Gallery and Travel on compact projections; load full source shards only for source-scoped or Records views.",
+    });
+  }
+  const semanticShardBytes =
+    (metrics.sourceShardFieldBytes.memory ?? 0) + (metrics.sourceShardFieldBytes.sectionIndex ?? 0);
+  if (semanticShardBytes > metrics.sourceShardBytes * 0.5) {
+    recommendations.push({
+      area: "source-shard-projection-split",
+      signal: `memory+sectionIndex account for ${formatBytes(semanticShardBytes)} of ${formatBytes(metrics.sourceShardBytes)} source shards`,
+      action:
+        "Split memory and semantic section payloads into on-demand shards before scaling the corpus beyond the current demo set.",
     });
   }
   if (metrics.sourceShardCount > 0 && metrics.blogSourceCount < metrics.sourceShardCount) {
@@ -322,6 +398,31 @@ function recommendationsFor(metrics) {
       signal: `initial scripts total ${formatBytes(metrics.initialScriptBytes)}`,
       action:
         "Inspect the shared vendor chunk and keep TanStack Virtual, parser runtime, and map code out of eager scripts.",
+    });
+  }
+  if (metrics.parserWorkerScriptBytes > 0 && metrics.lazyParserWorker) {
+    recommendations.push({
+      area: "parser-worker-startup",
+      signal: `parser worker chunk is ${formatBytes(metrics.parserWorkerScriptBytes)} and wasm is ${formatBytes(metrics.wasmAssetBytes)}`,
+      action:
+        "Keep the Org parser worker lazy so static Blog, Gallery, and Travel entry views do not fetch parser runtime before a source-scoped view needs it.",
+    });
+  }
+  if (metrics.staticSiteWideSourceDeferral) {
+    recommendations.push({
+      area: "site-wide-static-startup",
+      signal: "static site-wide views can render from the entry manifest",
+      action:
+        "Keep Blog index, Gallery, and Travel from loading the active source shard during boot; source shards should start at Zen/article or source-scoped views.",
+    });
+  }
+  if (metrics.largestAsyncAssets.length > 0) {
+    const largest = metrics.largestAsyncAssets[0];
+    recommendations.push({
+      area: "first-interaction-chunks",
+      signal: `largest async chunk is ${largest.path} at ${formatBytes(largest.bytes)}`,
+      action:
+        "For slow first interactions, prefetch the route-relevant chunk after idle instead of moving large TS dependencies into initial scripts.",
     });
   }
   if (metrics.eagerPhotoSwipeLightbox) {
@@ -378,6 +479,21 @@ function initialScriptsContainModule(pattern) {
       pattern.test(match[1] ?? ""),
     ),
   );
+}
+
+function assetBytesMatching(pattern) {
+  return [...assets.entries()]
+    .filter(([path]) => pattern.test(path))
+    .reduce((sum, [, bytes]) => sum + bytes, 0);
+}
+
+function largestAsyncAssets(initial, assetMap, limit) {
+  const initialSet = new Set(initial);
+  return [...assetMap.entries()]
+    .filter(([path]) => path.endsWith(".js") && !initialSet.has(path))
+    .map(([path, bytes]) => ({ path, bytes }))
+    .sort((left, right) => right.bytes - left.bytes)
+    .slice(0, limit);
 }
 
 function percentile(values, ratio) {

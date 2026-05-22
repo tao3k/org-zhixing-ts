@@ -64,6 +64,19 @@ export const renderView = (options: RenderViewOptions): string => {
 };
 
 const renderSiteWideView = (options: RenderViewOptions): string | null => {
+  if (options.view === "blog" && options.blogIndex && !options.blogZenMode) {
+    return renderBlogReader({
+      document: options.document,
+      articleHtml: options.articleHtml ?? "",
+      articleMessage: options.articleMessage ?? "",
+      blogIndex: options.blogIndex,
+      selectedRangeStart: options.blogArticleRangeStart ?? null,
+      tagFilter: options.blogTagFilter ?? null,
+      timeFilter: options.blogTimeFilter ?? null,
+      zenMode: false,
+      sourceFile: options.sourceFile,
+    });
+  }
   if (options.view === "travel" && options.travelView) {
     return renderTravel(
       options.document,

@@ -207,8 +207,17 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
       if (this.#staticSite) {
         travelViewFromStaticSite(this.#staticSite);
       }
+      this.#sourceItem = boot.initialSource;
       configureChrome(this.#dom, this.#siteConfig, this.#currentView, this.#sourceItem);
-      await this.#loadSource(boot.initialSource);
+      if (this.#viewNeedsActiveSource()) {
+        await this.#loadSource(boot.initialSource);
+      } else {
+        this.#pendingMessage = "";
+        this.#articleMessage = "";
+        await this.#refreshCurrentViewDependencies(this.#documentVersion);
+        this.#updateStatus();
+        this.#render();
+      }
       this.#writeUrlState();
     } catch (error) {
       this.#reportError(error);
@@ -294,7 +303,14 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
   }
 
   async #refreshActiveProjection(): Promise<void> {
-    if (!this.#documentView) {
+    if (!this.#documentView && this.#viewNeedsActiveSource()) {
+      const source = this.#sourceItem ?? this.#siteConfig?.sources[0];
+      if (source) {
+        await this.#loadSource(source);
+      }
+      return;
+    }
+    if (!this.#documentView && !this.#canRenderStaticSiteWideView()) {
       this.#render();
       return;
     }
@@ -313,6 +329,9 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
     }
     if (this.#currentView === "records" && this.#staticSite && this.#siteConfig) {
       await this.#refreshSiteNotesIfNeeded();
+      return;
+    }
+    if (this.#currentView === "travel" && this.#staticSite?.travel) {
       return;
     }
     if (this.#currentView === "agenda") {
@@ -398,7 +417,7 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
   }
 
   async #refreshAttachmentInventoryIfNeeded(): Promise<void> {
-    if (this.#documentView?.attachmentInventory || !this.#siteConfig) {
+    if (!this.#documentView || this.#documentView.attachmentInventory || !this.#siteConfig) {
       return;
     }
     const version = this.#documentVersion;
@@ -482,7 +501,7 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
   }
 
   async #refreshArticleHtmlIfNeeded(version: number): Promise<void> {
-    if (this.#renderedHtml) {
+    if (!this.#documentView || this.#renderedHtml) {
       return;
     }
     this.#articleMessage = "Rendering article...";
@@ -577,7 +596,7 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
     this.#writeUrlState();
     if (selection.sourceFile && this.#siteConfig) {
       const nextSource = sourceFromUserPath(this.#siteConfig, selection.sourceFile);
-      if (nextSource.sourceFile !== this.#sourceItem?.sourceFile) {
+      if (!this.#documentView || nextSource.sourceFile !== this.#sourceItem?.sourceFile) {
         void this.#loadSource(nextSource);
         return;
       }
@@ -612,6 +631,10 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
   }
 
   #updateStatus(): void {
+    if (!this.#documentView && this.#canRenderStaticSiteWideView()) {
+      this.#dom.status.value = "static site-wide";
+      return;
+    }
     this.#dom.status.value = renderStats(
       this.#documentView,
       this.#timings,
@@ -631,6 +654,37 @@ class OrgZhixingApp implements OrgZhixingAppHandle {
       agendaRuleId: this.#agendaRuleId,
       blog: this.#blog,
     });
+  }
+
+  #viewNeedsActiveSource(): boolean {
+    if (!this.#staticSite) {
+      return true;
+    }
+    switch (this.#currentView) {
+      case "blog":
+        return this.#blog.zenMode || !this.#staticSite.blog;
+      case "gallery":
+        return false;
+      case "records":
+        return false;
+      case "travel":
+        return !this.#staticSite.travel;
+      case "agenda":
+      case "capture":
+      case "diagnostics":
+      case "memory":
+        return true;
+    }
+  }
+
+  #canRenderStaticSiteWideView(): boolean {
+    return (
+      Boolean(this.#staticSite) &&
+      ((this.#currentView === "blog" && !this.#blog.zenMode && Boolean(this.#staticSite?.blog)) ||
+        (this.#currentView === "gallery" && this.#siteAttachmentGallery !== undefined) ||
+        (this.#currentView === "records" && this.#siteNotes !== undefined) ||
+        (this.#currentView === "travel" && Boolean(this.#staticSite?.travel)))
+    );
   }
 
   #reportError(error: unknown): void {

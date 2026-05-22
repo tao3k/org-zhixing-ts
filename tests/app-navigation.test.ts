@@ -113,7 +113,7 @@ describe("Org Zhixing navigator", () => {
     await waitForView("memory");
     expect(new URL(window.location.href).searchParams.get("view")).toBe("memory");
     expect(new URL(window.location.href).searchParams.get("source")).toBeNull();
-    expect(document.querySelectorAll(".memory-record")).toHaveLength(1);
+    await vi.waitFor(() => expect(document.querySelectorAll(".memory-record")).toHaveLength(1));
     expect(document.querySelectorAll(".org-record-render--memory")).toHaveLength(1);
     expect(document.body.textContent).not.toContain("No memory records in this source");
 
@@ -222,13 +222,15 @@ describe("Org Zhixing navigator", () => {
 
   it("loads source shards on demand while keeping site-wide Gallery and Records stable", async () => {
     const fetch = vi.fn(fetchShardedStaticFixture());
-    mountStaticApp("/", fetch);
+    const createWorker = vi.fn(() => new FakeWorker() as unknown as Worker);
+    mountStaticApp("/", fetch, createWorker);
 
     await waitForText("2 image items");
     await vi.waitFor(() => expect(statusText()).toContain("static"));
     expect(document.body.textContent).toContain("across 3 Org sources");
     expect(fetchedPaths(fetch)).toContain("/org-zhixing.static.json");
-    expect(fetchedPaths(fetch)).toContain("/org-zhixing.sources/wallpaper-gallery.json");
+    expect(fetchedPaths(fetch)).not.toContain("/org-zhixing.sources/wallpaper-gallery.json");
+    expect(createWorker).not.toHaveBeenCalled();
 
     clickNav("records");
     await waitForText("2 indexed notes from 2 Org sources");
@@ -241,16 +243,21 @@ describe("Org Zhixing navigator", () => {
         "/org-zhixing.sources/travel.json",
       ]),
     );
+    expect(createWorker).not.toHaveBeenCalled();
   });
 });
 
-const mountStaticApp = (path = "/", fetch = fetchStaticFixture()) => {
+const mountStaticApp = (
+  path = "/",
+  fetch = fetchStaticFixture(),
+  createWorker = () => new FakeWorker() as unknown as Worker,
+) => {
   window.history.replaceState(null, "", path);
   vi.stubGlobal("fetch", fetch);
   const root = document.createElement("div");
   root.id = "app";
   document.body.append(root);
-  return mountOrgZhixingApp(root, { createWorker: () => new FakeWorker() as unknown as Worker });
+  return mountOrgZhixingApp(root, { createWorker });
 };
 
 const fetchStaticFixture = () => {
