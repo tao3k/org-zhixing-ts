@@ -39,6 +39,7 @@ const budgets = {
   eagerCssLineBreak: false,
   eagerEffectRuntime: false,
   eagerTanStackQueryCore: false,
+  eagerReactQuery: false,
   eagerTanStackVirtual: false,
   eagerBlogVirtualList: false,
   eagerTravelVirtualList: false,
@@ -55,6 +56,7 @@ const indexHtml = await readFile(resolve(distRoot, "index.html"), "utf8");
 const staticManifestText = await readFile(resolve(distRoot, "org-zhixing.static.json"), "utf8");
 const staticManifest = JSON.parse(staticManifestText);
 const assets = await assetInventory();
+const scriptTexts = await scriptTextInventory(assets);
 const sourceShards = await sourceShardInventory();
 const agendaShards = await agendaShardInventory();
 const attachmentShards = await attachmentShardInventory();
@@ -71,9 +73,7 @@ const attachmentShardFieldBytes = aggregateShardFieldBytes(attachmentShardBreakd
 const memoryShardFieldBytes = aggregateShardFieldBytes(memoryShardBreakdown);
 const sectionShardFieldBytes = aggregateShardFieldBytes(sectionShardBreakdown);
 const initialScripts = scriptSrcs(indexHtml);
-const initialScriptTexts = await Promise.all(
-  initialScripts.map((script) => readFile(resolve(distRoot, script), "utf8")),
-);
+const initialScriptTexts = initialScripts.map((script) => scriptTexts.get(script) ?? "");
 const initialScriptBytes = initialScripts.reduce(
   (sum, script) => sum + (assets.get(script) ?? 0),
   0,
@@ -137,34 +137,28 @@ const metrics = {
   travelSourceCount: staticManifest.travel?.sourceCount ?? 0,
   travelScannedSourceCount: staticManifest.travel?.scannedSourceCount ?? 0,
   travelRegions: staticManifest.travel?.regions?.length ?? 0,
-  eagerPhotoSwipeLightbox: initialScriptsContainModule(
-    /node_modules\/photoswipe\/dist\/photoswipe-lightbox/,
+  eagerPhotoSwipeLightbox: initialScriptsContainModule(/PhotoSwipe|photoswipe/i),
+  eagerCssLineBreak: initialScriptsContainModule(/css-line-break|LineBreaker/),
+  eagerEffectRuntime: initialScriptsContainModule(/effect\/GlobalValue|effect\/Effect/),
+  eagerTanStackQueryCore: initialScriptsContainModule(/QueryCache|MutationCache|notifyManager/),
+  eagerReactQuery: initialScriptsContainModule(/QueryClientProvider|useBaseQuery|useQuery/),
+  eagerTanStackVirtual: initialScriptsContainModule(/Virtualizer|observeElementRect/),
+  eagerBlogVirtualList: initialScriptsContainModule(/blogVirtualized|blog-virtual-spacer/),
+  eagerTravelVirtualList: initialScriptsContainModule(/travelVirtualized|travel-virtual-spacer/),
+  eagerMasonryLayout: initialScriptsContainModule(/Masonry|masonry-layout/),
+  eagerFloatingPanel: initialScriptsContainModule(/floating-panel|data-floating/),
+  eagerZagSelect: initialScriptsContainModule(/source-select|select\.machine|data-part/),
+  dynamicTanStackChunk: asyncScriptsContainModule(/Virtualizer|observeElementRect/),
+  dynamicEffectRuntimeChunk: asyncScriptsContainModule(/effect\/GlobalValue|effect\/Effect/),
+  dynamicTanStackQueryChunk: asyncScriptsContainModule(/QueryCache|MutationCache|notifyManager/),
+  dynamicReactQueryChunk: asyncScriptsContainModule(/QueryClientProvider|useBaseQuery|useQuery/),
+  dynamicBlogVirtualListChunk: asyncScriptsContainModule(/blogVirtualized|blog-virtual-spacer/),
+  dynamicTravelVirtualListChunk: asyncScriptsContainModule(
+    /travelVirtualized|travel-virtual-spacer/,
   ),
-  eagerCssLineBreak: initialScriptsContainModule(/node_modules\/css-line-break/),
-  eagerEffectRuntime: initialScriptsContainModule(/node_modules\/effect\//),
-  eagerTanStackQueryCore: initialScriptsContainModule(/node_modules\/@tanstack\/query-core/),
-  eagerTanStackVirtual: initialScriptsContainModule(/node_modules\/@tanstack\/virtual-core/),
-  eagerBlogVirtualList: initialScriptsContainModule(/src\/blogVirtualList\.ts/),
-  eagerTravelVirtualList: initialScriptsContainModule(/src\/travelVirtualList\.ts/),
-  eagerMasonryLayout: initialScriptsContainModule(/node_modules\/masonry-layout/),
-  eagerFloatingPanel: initialScriptsContainModule(/node_modules\/@zag-js\/floating-panel/),
-  eagerZagSelect: initialScriptsContainModule(/node_modules\/@zag-js\/select/),
-  dynamicTanStackChunk: [...assets.keys()].some((script) => /tanstack_virtual-core/.test(script)),
-  dynamicEffectRuntimeChunk: [...assets.keys()].some((script) =>
-    /node_modules_effect/.test(script),
-  ),
-  dynamicTanStackQueryChunk: [...assets.keys()].some((script) =>
-    /tanstack_query-core|query-core/.test(script),
-  ),
-  dynamicBlogVirtualListChunk: [...assets.keys()].some((script) => /blogVirtualList/.test(script)),
-  dynamicTravelVirtualListChunk: [...assets.keys()].some((script) =>
-    /travelVirtualList/.test(script),
-  ),
-  dynamicMasonryChunk: [...assets.keys()].some((script) => /masonry-layout/.test(script)),
-  dynamicFloatingPanelChunk: [...assets.keys()].some((script) =>
-    /zag-js_floating-panel/.test(script),
-  ),
-  dynamicZagSelectChunk: [...assets.keys()].some((script) => /zag-js_select/.test(script)),
+  dynamicMasonryChunk: asyncScriptsContainModule(/Masonry|masonry-layout/),
+  dynamicFloatingPanelChunk: asyncScriptsContainModule(/floating-panel|data-floating/),
+  dynamicZagSelectChunk: asyncScriptsContainModule(/source-select|select\.machine|data-part/),
   lazyParserWorker: runtimeBoundary.lazyParserWorker,
   staticSiteWideSourceDeferral: runtimeBoundary.staticSiteWideSourceDeferral,
   deferredSourcePickerRuntime: runtimeBoundary.deferredSourcePickerRuntime,
@@ -240,6 +234,18 @@ async function assetInventory() {
     }
   }
   return sizes;
+}
+
+async function scriptTextInventory(assetMap) {
+  const texts = new Map();
+  await Promise.all(
+    [...assetMap.keys()]
+      .filter((path) => path.endsWith(".js"))
+      .map(async (path) => {
+        texts.set(path, await readFile(resolve(distRoot, path), "utf8"));
+      }),
+  );
+  return texts;
 }
 
 async function sourceShardInventory() {
@@ -486,6 +492,11 @@ function evaluateBudgets(metrics, budgetConfig) {
       budget: budgetConfig.eagerTanStackQueryCore,
       pass: metrics.eagerTanStackQueryCore === budgetConfig.eagerTanStackQueryCore,
     },
+    eagerReactQuery: {
+      actual: metrics.eagerReactQuery,
+      budget: budgetConfig.eagerReactQuery,
+      pass: metrics.eagerReactQuery === budgetConfig.eagerReactQuery,
+    },
     eagerBlogVirtualList: {
       actual: metrics.eagerBlogVirtualList,
       budget: budgetConfig.eagerBlogVirtualList,
@@ -664,6 +675,14 @@ function recommendationsFor(metrics) {
         "Keep query caching for source/agenda/attachment/memory/section shards lazy so static manifest-only refreshes do not pay the query runtime.",
     });
   }
+  if (!metrics.eagerReactQuery && metrics.dynamicReactQueryChunk) {
+    recommendations.push({
+      area: "react-query-route-boundary",
+      signal: "TanStack React Query is available as a route/data chunk instead of eager boot code",
+      action:
+        "Keep React Query behind route loaders until native React views consume static shards directly.",
+    });
+  }
   if (!metrics.eagerEffectRuntime && metrics.dynamicEffectRuntimeChunk) {
     recommendations.push({
       area: "typed-async-effect-runtime",
@@ -788,10 +807,13 @@ function failedBudgets(results) {
 }
 
 function initialScriptsContainModule(pattern) {
-  return initialScriptTexts.some((script) =>
-    [...script.matchAll(/webpack-internal:\/\/\/\.\/([^"\\\n]+)/g)].some((match) =>
-      pattern.test(match[1] ?? ""),
-    ),
+  return initialScriptTexts.some((script) => pattern.test(script));
+}
+
+function asyncScriptsContainModule(pattern) {
+  const initial = new Set(initialScripts);
+  return [...scriptTexts.entries()].some(
+    ([path, text]) => !initial.has(path) && pattern.test(text),
   );
 }
 

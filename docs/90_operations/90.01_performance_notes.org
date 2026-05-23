@@ -61,10 +61,10 @@ only for orchestration and rendering.
   site-wide surface, the source shard and agenda shard are requested
   concurrently, and the existing static view stays visible until the target
   projection is ready.
-- Static generation now enters an =Effect= typed async boundary in Node.  The
-  measured browser build kept Effect out of both the eager entry scripts and the
-  shard-fetch chunks because even the =effect/Effect= browser submodule produced
-  a multi-megabyte async chunk in Rspack.
+- Static generation enters an =Effect= typed async boundary in Node, and the
+  React route service layer uses Effect behind a lazy route chunk.  Effect must
+  stay out of eager entry scripts; route loaders can pay that cost when they
+  need typed async service failures.
 - Theme tokens are generated before build with =style-dictionary=, Capsize
   metrics, and Tailwind CSS v4 utilities.  Tailwind currently owns repeated Org
   semantic atoms such as timestamps and ID links through a =source(none)=
@@ -132,15 +132,14 @@ indexing path for the first screen.  The same 100x fixture currently measures
 0.89 ms / p95 1.12 ms, and pure =viewIndexJsonParse= at p50 0.69 ms / p95 1.07
 ms.
 
-The current UI performance receipt shows the entry manifest at about 64 KiB,
+The current UI performance receipt shows the entry manifest at about 65 KiB,
 with eight source shards totaling about 64 KiB, eight lazy agenda shards
 totaling about 77 KiB, eight lazy attachment shards totaling about 169 KiB,
 eight lazy memory shards totaling about 506 KiB, and eight lazy section shards
-totaling about 448 KiB.  Initial scripts are about 965 KiB across three files
+totaling about 448 KiB.  Initial scripts are about 385 KiB across three files
 and generated Tailwind CSS is about 1 KiB,
-with PhotoSwipe, TanStack Virtual, TanStack Query Core, Masonry, Zag Floating
-Panel, and Zag Select all behind dynamic chunks; Effect is used in static
-generation and does not ship to the browser.  Static manifest
+with PhotoSwipe, TanStack Virtual, TanStack Query Core, Effect service runtime,
+Masonry, Zag Floating Panel, and Zag Select all behind dynamic chunks.  Static manifest
 parse currently measures p50 0.13 ms / p95 0.14 ms on this fixture, so the
 former entry-manifest bottleneck has moved into shard-level DTO shape and first
 interaction chunk strategy.  The manifest parse microbenchmark uses batched
@@ -154,14 +153,14 @@ has moved into =org-zhixing.attachments/*.json=, =memory= has moved into
 The remaining source-shard payload is mainly =html= at about 31 KiB and
 =viewIndex= at about 29 KiB.  The largest source shard is
 =org-zhixing.sources/org-syntax-atlas.json= at about 13 KiB; the largest memory
-shard is =org-zhixing.memory/wallpaper-gallery.json= at about 152 KiB; the
+shard is =org-zhixing.memory/wallpaper-gallery.json= at about 156 KiB; the
 largest section shard is =org-zhixing.sections/wallpaper-gallery.json= at about
-131 KiB.  The largest async chunks are =@zag-js/select= at about 634 KiB,
-PhotoSwipe at about 497 KiB, =@tanstack/query-core= at about 298 KiB, Zag
-Floating Panel at about 213 KiB, and Masonry at about 160 KiB.
-The report now gates =deferredSourcePickerRuntime= and
-=idleInteractionChunkPrefetch= so these large chunks remain outside the boot
-path while still being warmed before likely first use.
+134 KiB.  The largest async chunks now include the Effect service runtime at
+about 144 KiB and TanStack Query Core at about 40 KiB, followed by route
+interaction chunks for Travel Glance, virtual lists, and source selection.  The
+report gates eager React Query, eager Effect, eager TanStack Query Core, virtual
+lists, Masonry, Zag Floating Panel, and Zag Select so these large chunks remain
+outside the boot path.
 
 ** Next Performance Milestones
 

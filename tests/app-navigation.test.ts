@@ -166,7 +166,7 @@ describe("Org Zhixing navigator", () => {
     expect(document.body.textContent).toContain("2 indexed notes from 2 Org sources");
   });
 
-  it("uses legacy source query only as boot input and keeps navigation URLs source-free", async () => {
+  it("uses source query only as boot input and keeps navigation URLs source-free", async () => {
     mountStaticApp("/?source=org-zhixing-demo.org");
 
     await vi.waitFor(() =>

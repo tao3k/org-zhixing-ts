@@ -12,5 +12,6 @@ should choose a declared category and an unused coordinate before adding a file.
 - [[file:00_index/00.01_jdex.org][00.01 JDex]]
 - [[file:10_architecture/10.01_content_directory_contract.org][10.01 Content Directory Contract]]
 - [[file:10_architecture/10.02_agent_travel_projection.org][10.02 Agent Travel Projection]]
+- [[file:10_architecture/10.03_rsbuild_react_router_effect_stack.org][10.03 Rsbuild React Router Effect Stack]]
 - [[file:20_design/20.01_elegant_system.org][20.01 Elegant System]]
 - [[file:90_operations/90.01_performance_notes.org][90.01 Performance Notes]]

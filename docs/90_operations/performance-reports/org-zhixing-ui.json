@@ -24,6 +24,7 @@
     "eagerCssLineBreak": false,
     "eagerEffectRuntime": false,
     "eagerTanStackQueryCore": false,
+    "eagerReactQuery": false,
     "eagerTanStackVirtual": false,
     "eagerBlogVirtualList": false,
     "eagerTravelVirtualList": false,
@@ -137,49 +138,49 @@
       "sourceId": 135,
       "schemaVersion": 8
     },
-    "initialScriptBytes": 988345,
+    "initialScriptBytes": 394527,
     "initialScriptCount": 3,
     "initialScripts": [
-      "assets/runtime.32ec875b.js",
-      "assets/vendors-node_modules_fontsource-variable_inter_files_inter-latin-wght-normal_woff2-node_modul-38c2c2.984ee745.js",
-      "assets/app.6df81f64.js"
+      "assets/lib-react.4fa030ab.js",
+      "assets/836.e1b72ad0.js",
+      "assets/app.2edb692d.js"
     ],
     "generatedTailwindCssBytes": 774,
     "tailwindContentUtilityLeak": false,
-    "parserWorkerScriptBytes": 119867,
-    "wasmAssetBytes": 2158753,
+    "parserWorkerScriptBytes": 0,
+    "wasmAssetBytes": 0,
     "largestAsyncAssets": [
       {
-        "path": "assets/vendors-node_modules_zag-js_select_dist_index_mjs.57e2c591.js",
-        "bytes": 649116
+        "path": "assets/634.437f5d75.js",
+        "bytes": 143521
       },
       {
-        "path": "assets/vendors-node_modules_photoswipe_dist_photoswipe_esm_js.937f6f46.js",
-        "bytes": 509404
+        "path": "assets/10.b3e89ac7.js",
+        "bytes": 39943
       },
       {
-        "path": "assets/vendors-node_modules_tanstack_query-core_build_modern_index_js.e354a251.js",
-        "bytes": 305112
+        "path": "assets/594.ddc1e80d.js",
+        "bytes": 26365
       },
       {
-        "path": "assets/vendors-node_modules_zag-js_floating-panel_dist_index_mjs.9c71c061.js",
-        "bytes": 218042
+        "path": "assets/711.645f5fe8.js",
+        "bytes": 22149
       },
       {
-        "path": "assets/vendors-node_modules_masonry-layout_masonry_js.7537f6f5.js",
-        "bytes": 164218
+        "path": "assets/64.eb8725cb.js",
+        "bytes": 19109
       },
       {
-        "path": "assets/vendors-node_modules_photoswipe_dist_photoswipe-lightbox_esm_js.5afd0729.js",
-        "bytes": 148401
+        "path": "assets/43.dbf8c8f5.js",
+        "bytes": 10018
       },
       {
-        "path": "assets/vendors-node_modules_orgize_worker_js.1d4df895.js",
-        "bytes": 119867
+        "path": "assets/767.4fb4ee82.js",
+        "bytes": 7961
       },
       {
-        "path": "assets/vendors-node_modules_tanstack_virtual-core_dist_esm_index_js.4da5d33b.js",
-        "bytes": 111303
+        "path": "assets/550.184c2fb4.js",
+        "bytes": 6912
       }
     ],
     "blogArticles": 8,
@@ -194,6 +195,7 @@
     "eagerCssLineBreak": false,
     "eagerEffectRuntime": false,
     "eagerTanStackQueryCore": false,
+    "eagerReactQuery": false,
     "eagerTanStackVirtual": false,
     "eagerBlogVirtualList": false,
     "eagerTravelVirtualList": false,
@@ -201,8 +203,9 @@
     "eagerFloatingPanel": false,
     "eagerZagSelect": false,
     "dynamicTanStackChunk": true,
-    "dynamicEffectRuntimeChunk": false,
+    "dynamicEffectRuntimeChunk": true,
     "dynamicTanStackQueryChunk": true,
+    "dynamicReactQueryChunk": false,
     "dynamicBlogVirtualListChunk": true,
     "dynamicTravelVirtualListChunk": true,
     "dynamicMasonryChunk": true,
@@ -214,10 +217,10 @@
     "idleInteractionChunkPrefetch": true,
     "staticManifestParse": {
       "name": "staticManifestParse",
-      "minMs": 0.13,
+      "minMs": 0.12,
       "p50Ms": 0.13,
-      "p95Ms": 0.14,
-      "maxMs": 0.15,
+      "p95Ms": 0.13,
+      "maxMs": 0.14,
       "avgMs": 0.13
     },
     "travelProjectionRead": {
@@ -266,7 +269,7 @@
       "pass": true
     },
     "initialScriptBytes": {
-      "actual": 988345,
+      "actual": 394527,
       "budget": 1500000,
       "pass": true
     },
@@ -291,7 +294,7 @@
       "pass": true
     },
     "staticManifestParseP95Ms": {
-      "actual": 0.14,
+      "actual": 0.13,
       "budget": 80,
       "pass": true
     },
@@ -326,6 +329,11 @@
       "pass": true
     },
     "eagerTanStackQueryCore": {
+      "actual": false,
+      "budget": false,
+      "pass": true
+    },
+    "eagerReactQuery": {
       "actual": false,
       "budget": false,
       "pass": true
@@ -408,9 +416,9 @@
       "action": "Keep query caching for source/agenda/attachment/memory/section shards lazy so static manifest-only refreshes do not pay the query runtime."
     },
     {
-      "area": "typed-async-effect-node-boundary",
-      "signal": "Effect is absent from browser assets",
-      "action": "Keep Effect on static generation and other Node orchestration boundaries until the browser bundle cost is justified by a domain effect surface."
+      "area": "typed-async-effect-runtime",
+      "signal": "Effect stays behind the static shard async boundary",
+      "action": "Keep typed async fetch/error handling out of the static entry path; use it at domain boundaries where failure shape matters."
     },
     {
       "area": "tailwind-design-token-runtime",
@@ -421,11 +429,6 @@
       "area": "tailwind-source-boundary",
       "signal": "Tailwind source scanning is disabled for user/exported content classes",
       "action": "Keep source(none) on the Tailwind utilities import so exported Org HTML classes do not silently become design-system utilities."
-    },
-    {
-      "area": "parser-worker-startup",
-      "signal": "parser worker chunk is 117 KiB and wasm is 2.1 MiB",
-      "action": "Keep the Org parser worker lazy so static Blog, Gallery, and Travel entry views do not fetch parser runtime before a source-scoped view needs it."
     },
     {
       "area": "site-wide-static-startup",
@@ -444,7 +447,7 @@
     },
     {
       "area": "first-interaction-chunks",
-      "signal": "largest async chunk is assets/vendors-node_modules_zag-js_select_dist_index_mjs.57e2c591.js at 634 KiB",
+      "signal": "largest async chunk is assets/634.437f5d75.js at 140 KiB",
       "action": "For slow first interactions, prefetch the route-relevant chunk after idle instead of moving large TS dependencies into initial scripts."
     },
     {

@@ -1,0 +1,140 @@
+* 10.03 Rsbuild React Router Effect Stack
+
+Org Zhixing uses a static-first React architecture on top of Rsbuild and
+Rspack.  TanStack Start is not part of this product surface: the reader is not
+a server-framework application, and the project should not accept a framework
+runtime when the important contract is deterministic static Org projection plus
+typed client navigation.
+
+** Chosen Stack
+
+| Layer | Owner | Contract |
+|-------+-------+----------|
+| Build | Rsbuild over Rspack | Own dev server, HTML generation, asset paths, public assets, static shard copy, and Rspack optimization knobs. |
+| UI runtime | React | Own component composition, lifecycle, and route-scoped effects. |
+| Routing | TanStack Router | Own path/search state, route matching, route-level lazy loading, preloading, and typed navigation. |
+| Data cache | TanStack Query | Own static manifest and shard caching with stable query keys. |
+| Domain effects | Effect | Own typed async services, dependency wiring, and structured error surfaces. |
+| Org projection | orgize WASM plus static generator | Own Org syntax, HTML export, DTOs, memory, agenda, attachment, and semantic section projections. |
+
+** Why Not TanStack Start
+
+Org Zhixing is closer to a static reader and Agent projection surface than a
+full-stack web app.  The current performance strategy depends on:
+
+- generated entry manifests and view-specific shards;
+- no active source shard during static Blog, Gallery, or Travel boot;
+- no parser worker or WASM fetch until a source-scoped view needs live Org
+  projection;
+- durable Org files as the content source of truth.
+
+TanStack Start would introduce a server-framework boundary before the project
+needs one.  TanStack Router and TanStack Query give the useful parts directly:
+typed route state, route loaders, preload, search params, and cache keys,
+without coupling Org Zhixing to Start's Rspack integration maturity.
+
+** Build Boundary
+
+Rsbuild is the public build tool.  Direct Rspack configuration should only
+appear inside =rsbuild.config.ts= through Rsbuild's Rspack extension point when
+there is no higher-level Rsbuild option.
+
+The build config owns:
+
+- =source.entry= for the React entrypoint;
+- =html.template= for the stable =index.html= shell;
+- =server.publicDir= for =public/= assets;
+- =output.copy= for generated =org-zhixing.static.json= and shard directories;
+- =output.distPath= so performance scripts can continue scanning =dist/assets=;
+- =dev.watchFiles= for Org/TOML/WASM artifact feedback without watching the
+  parent checkout or generated cache directories.
+
+** Router Boundary
+
+TanStack Router owns browser location.  New route paths should be path-first:
+
+| Route | Meaning |
+|-------+---------|
+| =/blogs= | Site-wide article index from static manifest. |
+| =/blogs/$articleId= | Zen reader for one Org file article. |
+| =/gallery= | Site-wide image attachment gallery. |
+| =/notes= | Site-wide note and reading index. |
+| =/travel= | Site-wide travel projection. |
+| =/memory= | Agent memory projection. |
+| =/agenda= | Agenda projection. |
+
+Legacy =?view= URLs may continue to resolve during migration, but new code
+should not create them.  Article navigation should become explicit route state
+so a stale hash cannot survive a cross-view click.
+
+** Query Boundary
+
+TanStack Query owns fetch/cache behavior for generated static data.  Query keys
+must include the generated static site identity:
+
+#+begin_src text
+["org-zhixing", generatedAt, "manifest"]
+["org-zhixing", generatedAt, "source", sourceFile, shardPath]
+["org-zhixing", generatedAt, "agenda", sourceFile, shardPath]
+["org-zhixing", generatedAt, "memory", sourceFile, shardPath]
+["org-zhixing", generatedAt, "sections", sourceFile, shardPath]
+["org-zhixing", generatedAt, "attachments", sourceFile, shardPath]
+#+end_src
+
+Static data queries should use infinite stale time.  A refresh of an already
+generated site must render from cache or static manifest data instead of
+showing a full-page loading state.
+
+** Effect Boundary
+
+Effect belongs at service boundaries, not inside presentational components.
+Services should describe domain operations:
+
+- =ContentManifestService= loads and validates the static manifest.
+- =StaticShardService= loads source, agenda, memory, section, and attachment
+  shards.
+- =OrgProjectionService= runs live WASM projections when static data is absent
+  or a future editor asks for preview.
+- =TravelProjectionService= projects site-wide travel views.
+- =ArticleIndexService= projects blog index and article route metadata.
+
+React routes call services through Query loaders or hooks.  Service methods
+return typed Effect values; route loaders convert them at the edge with
+=Effect.runPromise= or a small local helper.
+
+** Migration Plan
+
+Stage 1 establishes the stack without rewriting every view:
+
+- replace direct Rspack scripts with Rsbuild scripts;
+- mount React as the root runtime;
+- install TanStack Router as the location owner;
+- route Blog, Zen reader, Gallery, Notes, Travel, Memory, Agenda,
+  Diagnostics, and Capture through React components that consume static
+  service/query data directly;
+- keep static generator and shard DTO contracts unchanged;
+- add tests that guard the architecture boundary and prevent Effect from
+  entering eager browser assets.
+
+Stage 2 migrates the Blog index and Zen article reader to native React route
+components backed by TanStack Query.
+
+Stage 3 migrates Gallery, Travel, Notes, Memory, and Agenda one route at a
+time, keeping large interaction libraries behind route-level lazy imports.
+
+Stage 4 deletes any unused DOM-era host code after the React routes have covered
+the remaining live-editor and capture-write use cases.
+
+** Performance Contract
+
+The stack change is not allowed to weaken the static-first contract:
+
+- static Blog/Gallery/Travel refresh must not create the parser worker;
+- active source shards remain on-demand;
+- Zag, Masonry, PhotoSwipe, TanStack Virtual, and map runtimes remain lazy;
+- Effect must not appear in eager browser scripts;
+- route chunks may be prefetched on intent or idle, but large dependencies
+  should not move into the boot path to hide first-click latency.
+
+Performance receipts remain Git-tracked under
+=docs/90_operations/performance-reports/=.

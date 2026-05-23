@@ -94,7 +94,7 @@ describe("Org Zhixing performance regression gates", () => {
     const app = readFileSync("src/app.ts", "utf8");
     const generator = readFileSync("scripts/generate-static-site.mjs", "utf8");
     const perfScript = readFileSync("scripts/bench-org-zhixing-ui.mjs", "utf8");
-    const rspackConfig = readFileSync("rspack.config.mjs", "utf8");
+    const rsbuildConfig = readFileSync("rsbuild.config.ts", "utf8");
     const staticSiteData = readFileSync("src/staticSiteData.ts", "utf8");
     const staticSiteShards = readFileSync("src/staticSiteShards.ts", "utf8");
 
@@ -135,14 +135,15 @@ describe("Org Zhixing performance regression gates", () => {
     expect(app).toContain("loadStaticAttachmentInventoryForSource(");
     expect(app).toContain("loadStaticMemoryForSource(this.#staticSite, this.#sourceItem)");
     expect(app).toContain("loadStaticSectionIndexForSource(");
-    expect(rspackConfig).toContain("staticAgendaShardRoot");
-    expect(rspackConfig).toContain("staticAttachmentShardRoot");
-    expect(rspackConfig).toContain("staticMemoryShardRoot");
-    expect(rspackConfig).toContain("staticSectionShardRoot");
-    expect(rspackConfig).toContain("org-zhixing.agenda/[name][ext]");
-    expect(rspackConfig).toContain("org-zhixing.attachments/[name][ext]");
-    expect(rspackConfig).toContain("org-zhixing.memory/[name][ext]");
-    expect(rspackConfig).toContain("org-zhixing.sections/[name][ext]");
+    expect(rsbuildConfig).toContain("pluginReact()");
+    expect(rsbuildConfig).toContain("staticAgendaShardRoot");
+    expect(rsbuildConfig).toContain("staticAttachmentShardRoot");
+    expect(rsbuildConfig).toContain("staticMemoryShardRoot");
+    expect(rsbuildConfig).toContain("staticSectionShardRoot");
+    expect(rsbuildConfig).toContain("org-zhixing.agenda/[name][ext]");
+    expect(rsbuildConfig).toContain("org-zhixing.attachments/[name][ext]");
+    expect(rsbuildConfig).toContain("org-zhixing.memory/[name][ext]");
+    expect(rsbuildConfig).toContain("org-zhixing.sections/[name][ext]");
     expect(perfScript).toContain("agendaShardBytes");
     expect(perfScript).toContain("attachmentShardBytes");
     expect(perfScript).toContain("eagerTanStackQueryCore: false");
@@ -156,6 +157,49 @@ describe("Org Zhixing performance regression gates", () => {
     expect(perfScript).toContain("static-attachment-shards");
     expect(perfScript).toContain("static-memory-shards");
     expect(perfScript).toContain("static-section-shards");
+  });
+
+  it("anchors the app shell in Rsbuild, React, and TanStack Router without eager React Query", () => {
+    const packageJson = JSON.parse(readFileSync("package.json", "utf8")) as {
+      dependencies: Record<string, string>;
+      devDependencies: Record<string, string>;
+      scripts: Record<string, string>;
+    };
+    const main = readFileSync("src/main.tsx", "utf8");
+    const router = readFileSync("src/react/router.tsx", "utf8");
+    const queryClient = readFileSync("src/react/queryClient.ts", "utf8");
+    const contentServices = readFileSync("src/services/contentServices.ts", "utf8");
+    const rsbuildConfig = readFileSync("rsbuild.config.ts", "utf8");
+    const perfScript = readFileSync("scripts/bench-org-zhixing-ui.mjs", "utf8");
+
+    expect(packageJson.scripts.dev).toContain("rsbuild dev");
+    expect(packageJson.scripts.build).toContain("rsbuild build");
+    expect(packageJson.scripts.preview).toContain("rsbuild preview");
+    expect(packageJson.devDependencies["@rsbuild/core"]).toBeTruthy();
+    expect(packageJson.devDependencies["@rsbuild/plugin-react"]).toBeTruthy();
+    expect(packageJson.dependencies.react).toBeTruthy();
+    expect(packageJson.dependencies["react-dom"]).toBeTruthy();
+    expect(packageJson.dependencies["@tanstack/react-router"]).toBeTruthy();
+    expect(packageJson.dependencies["@tanstack/react-query"]).toBeTruthy();
+    expect(packageJson.devDependencies["@rspack/core"]).toBeUndefined();
+    expect(packageJson.devDependencies["@rspack/cli"]).toBeUndefined();
+    expect(main).toContain("<RouterProvider router={router} />");
+    expect(router).toContain("createRouter");
+    expect(router).toContain('path: "/blogs"');
+    expect(router).toContain('path: "/blogs/$articleId"');
+    expect(router).toContain('defaultPreload: "intent"');
+    expect(router).toContain("loadArticleQuery");
+    expect(router).toContain("loadNotesQuery");
+    expect(router).not.toContain("Legacy");
+    expect(router).not.toContain("?view=");
+    expect(queryClient).toContain('import("@tanstack/react-query")');
+    expect(queryClient).not.toContain('from "@tanstack/react-query"');
+    expect(contentServices).toContain('from "effect/Effect"');
+    expect(contentServices).toContain("loadBlogArticleData");
+    expect(rsbuildConfig).toContain("defineConfig");
+    expect(rsbuildConfig).toContain("pluginReact()");
+    expect(perfScript).toContain("eagerReactQuery: false");
+    expect(perfScript).toContain("dynamicReactQueryChunk");
   });
 
   it("does not render parser/source loading text in the static app shell", () => {

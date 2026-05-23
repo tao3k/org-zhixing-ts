@@ -40,23 +40,22 @@ direnv exec . just dev
 The parent `orgize` checkout owns the Rust/WASM toolchain and builds
 `wasm/dist/orgize.js` plus `wasm/dist/orgize_bg.wasm` through its root Justfile.
 `org-zhixing` consumes the published `orgize-wasm` package through the `orgize`
-npm dependency and owns the TypeScript/Rspack browser shell. `npm run dev` runs
-`rspack serve` with file watching for Org sources, TOML configuration, and the
-WASM package artifacts, so frontend changes compile without restarting
-`just dev`.
+npm dependency and owns the Rsbuild + React browser shell. `npm run dev` runs
+`rsbuild dev` with file watching for Org sources, TOML configuration, generated
+static shards, and the WASM package artifacts, so frontend changes compile
+without restarting `just dev`.
 
 ## Host Boundary
 
-The long-term product host can still be TanStack Start or another application
-shell. This demo keeps the parser-facing UI host small and explicit: Rspack owns
-the local compiler/watch surface, and the app module owns rendering and
-interaction state.
+The product host is now a static-first React app on Rsbuild. TanStack Router
+owns path-first navigation, TanStack Query owns generated manifest/shard
+caching, and Effect owns the typed async service layer that loads Org
+projections.
 
-The reusable browser layer is `mountOrgZhixingApp(root, { createWorker })`.
-`src/workerFactory.ts` creates the browser worker through Rspack's native
-`new Worker(new URL(..., import.meta.url))` path. The parser client, TOML
-config, source loading, view model, and renderer stay host-agnostic so a larger
-product route can mount the same app with its own worker factory.
+`src/workerFactory.ts` creates the browser worker through the bundler-native
+`new Worker(new URL(..., import.meta.url))` path. Static routes consume
+pre-generated DTOs first; the parser worker remains available for live source
+projection when a route or future editor asks for it.
 
 ## Documentation
 
@@ -141,7 +140,7 @@ checkout when the Rust WASM package needs rebuilding.
 
 ## Performance Shape
 
-`npm run build` runs `npm run generate:static` before Rspack. That generator
+`npm run build` runs `npm run generate:static` before Rsbuild. That generator
 uses the Rust/WASM package to precompute `viewIndex`, `sectionIndex`, rendered
 HTML, attachment inventory, memory, agenda, and lint for every discovered Org
 source.  The build ships a compact `org-zhixing.static.json` entry manifest plus

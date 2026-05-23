@@ -18,6 +18,7 @@ This is the coordinate map for durable Org Zhixing documentation.
 | 00.01 | [[file:00.01_jdex.org][JDex]] | Active |
 | 10.01 | [[file:../10_architecture/10.01_content_directory_contract.org][Content Directory Contract]] | Active |
 | 10.02 | [[file:../10_architecture/10.02_agent_travel_projection.org][Agent Travel Projection]] | Active |
+| 10.03 | [[file:../10_architecture/10.03_rsbuild_react_router_effect_stack.org][Rsbuild React Router Effect Stack]] | Active |
 | 20.01 | [[file:../20_design/20.01_elegant_system.org][Elegant System]] | Active |
 | 90.01 | [[file:../90_operations/90.01_performance_notes.org][Performance Notes]] | Active |
 
